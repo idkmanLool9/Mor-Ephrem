@@ -1,17 +1,19 @@
 "use client";
+import { useRef, useState } from "react";
+import { useMembers, memberHref } from "@/lib/member-store";
+import { MemberForm } from "@/components/member-form";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Mail, MapPin, ArrowUpRight, FileClock } from "lucide-react";
-import {
-  Member,
-  members,
-  families,
-  activities,
-  date,
-  fullName,
-} from "@/lib/data";
+import { Member, families, activities, date, fullName } from "@/lib/data";
 import { Avatar, Breadcrumb, Card, Fields, Status } from "@/components/shared";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-export function MemberProfile({ member: m }: { member: Member }) {
+export function MemberProfile({ member }: { member: Member }) {
+  const members = useMembers();
+  const m = members.find((item) => item.id === member.id) ?? member;
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [saved, setSaved] = useState(false);
+  const [editing, setEditing] = useState(false);
   const family = families.find((f) => f.id === m.familyId)!;
   const relatives = members.filter((r) => r.familyId === m.familyId);
   const history = activities.filter((a) => a.memberId === m.id);
@@ -39,7 +41,7 @@ export function MemberProfile({ member: m }: { member: Member }) {
       <div className="profile-list">
         {relatives.map((r) => (
           <Link
-            href={`/leden/${r.id}`}
+            href={memberHref(r.id)}
             key={r.id}
             className="profile-list-item"
           >
@@ -92,6 +94,44 @@ export function MemberProfile({ member: m }: { member: Member }) {
           </a>
         </div>
       </div>
+      <div className="profile-actions">
+        <p role="status">
+          {saved
+            ? "Wijzigingen opgeslagen in deze browser."
+            : "Lokale demo · uitsluitend fictieve gegevens"}
+        </p>
+        <Button
+          onClick={() => {
+            setEditing(true);
+            dialog.current?.showModal();
+          }}
+        >
+          Lid bewerken
+        </Button>
+      </div>
+      <dialog
+        ref={dialog}
+        className="edit-dialog"
+        aria-labelledby="edit-title"
+        onClose={() => setEditing(false)}
+      >
+        <div className="card-header">
+          <h2 id="edit-title">Lid bewerken</h2>
+          <Button variant="ghost" onClick={() => dialog.current?.close()}>
+            Sluiten
+          </Button>
+        </div>
+        {editing && (
+          <MemberForm
+            member={m}
+            onSaved={() => {
+              dialog.current?.close();
+              setSaved(true);
+            }}
+            onCancel={() => dialog.current?.close()}
+          />
+        )}
+      </dialog>
       <Tabs defaultValue="overzicht">
         <TabsList aria-label="Ledenprofiel">
           <TabsTrigger value="overzicht">Overzicht</TabsTrigger>
@@ -140,8 +180,8 @@ export function MemberProfile({ member: m }: { member: Member }) {
         </TabsContent>
       </Tabs>
       <p className="page-note">
-        Fictief dossier · Alleen-lezen demo · Databaseopslag en authenticatie
-        zijn nog niet actief.
+        Fictief dossier · Wijzigingen worden lokaal bewaard. Centrale
+        databaseopslag en authenticatie zijn nog niet actief.
       </p>
     </>
   );

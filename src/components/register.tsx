@@ -10,11 +10,13 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { members, families, fullName } from "@/lib/data";
+import { families, fullName } from "@/lib/data";
 import { Avatar, Status } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { useMembers, memberHref } from "@/lib/member-store";
 const PAGE_SIZE = 8;
 export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
+  const members = useMembers();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("Alle woonplaatsen");
   const [status, setStatus] = useState("Alle statussen");
@@ -104,11 +106,12 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
             setPage(1);
           }}
         >
-          {["Alle woonplaatsen", "Oldenzaal", "Enschede", "Hengelo"].map(
-            (v) => (
-              <option key={v}>{v}</option>
-            ),
-          )}
+          {[
+            "Alle woonplaatsen",
+            ...Array.from(new Set(members.map((m) => m.city))).sort(),
+          ].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
         </select>
         {isMembers && (
           <select
@@ -170,7 +173,10 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
               .map((r) => (
                 <tr key={r.id}>
                   <td>
-                    <Link className="person-cell" href={`/${kind}/${r.id}`}>
+                    <Link
+                      className="person-cell"
+                      href={isMembers ? memberHref(r.id) : `/gezinnen/${r.id}`}
+                    >
                       <Avatar name={r.name} />
                       <div>
                         <strong>{r.name}</strong>
@@ -197,7 +203,7 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
                     <Link
                       className="row-link"
                       aria-label={`Bekijk ${r.name}`}
-                      href={`/${kind}/${r.id}`}
+                      href={isMembers ? memberHref(r.id) : `/gezinnen/${r.id}`}
                     >
                       <ArrowUpRight size={17} />
                     </Link>

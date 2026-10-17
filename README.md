@@ -27,7 +27,7 @@ npm start
 - Desktop- en iPad-layout; op kleine schermen een inklapbaar navigatiemenu.
 - Grafregister en Begraafplaats zijn uitgeschakeld en gelabeld met ‘Binnenkort’.
 
-Dit is een **alleen-lezen demonstratie**. Er zijn geen opslag, login, autorisaties, documenten of bewerkacties actief. De activiteitendata zijn een vaste fictieve momentopname, geen audittrail. Er worden geen gegevens naar Supabase verzonden.
+Dit is een **lokale demonstratie**. Leden aanmaken en bewerken kan met formuliercontroles; deze wijzigingen worden via localStorage uitsluitend in dezelfde browser bewaard. Er zijn geen centrale opslag, login, autorisaties of documenten actief. De activiteitendata zijn een vaste fictieve momentopname, geen audittrail. Er worden geen gegevens naar Supabase verzonden.
 
 ## Supabase voorbereiden
 
@@ -74,3 +74,9 @@ GITHUB_PAGES=true npm run build
 ```
 
 De export staat in `out/`; assets en navigatie gebruiken het projectpad `/Mor-Ephrem`. Zonder `GITHUB_PAGES=true` blijven de normale ontwikkelserver en productiebuild beschikbaar.
+
+## Lokale ledenadministratie
+
+Gebruik **Nieuw lid** in het ledenregister of **Lid bewerken** op een profiel. Nieuwe leden worden gekoppeld aan een bestaand gezin en verschijnen in register, gezinsdossier en dashboardtotalen. Filters, status en contactgegevens gebruiken dezelfde lokale dataset. De vaste gezinscontactpersoon kan niet naar een ander gezin worden verplaatst.
+
+Gebruik uitsluitend fictieve gegevens. Opslag is per browser en domein (`antioch.members.v1`), zonder synchronisatie met Supabase of andere apparaten. Wissen van websitegegevens verwijdert lokale wijzigingen. Nieuwe lokale dossiers gebruiken `/leden/lokaal?id=...`, zodat vernieuwen ook op GitHub Pages werkt. De vaste activiteitenlijst is nog geen logboek van lokale wijzigingen.

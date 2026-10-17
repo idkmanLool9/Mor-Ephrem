@@ -5,7 +5,10 @@ export default defineConfig({
   retries: 0,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL:
+      process.env.GITHUB_PAGES_TEST === "true"
+        ? "http://127.0.0.1:3100"
+        : "http://127.0.0.1:3000",
     launchOptions: {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     },
@@ -23,10 +26,13 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: "npm run start",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer:
+    process.env.GITHUB_PAGES_TEST === "true"
+      ? undefined
+      : {
+          command: "npm run start",
+          url: "http://127.0.0.1:3000",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120000,
+        },
 });

@@ -1,3 +1,5 @@
+"use client";
+import { useMembers, memberHref } from "@/lib/member-store";
 import Link from "next/link";
 import {
   Users,
@@ -7,10 +9,11 @@ import {
   ClipboardList,
   ArrowUpRight,
 } from "lucide-react";
-import { members, families, activities, date, fullName } from "@/lib/data";
+import { families, activities, date, fullName } from "@/lib/data";
 import { PageHeading, Card, Avatar, Status } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 export default function Dashboard() {
+  const members = useMembers();
   return (
     <>
       <PageHeading
@@ -114,7 +117,8 @@ export default function Dashboard() {
             <h2>Uw administratie, overzichtelijk.</h2>
             <p>
               Verken de registers en dossiers met fictieve voorbeeldgegevens.
-              Opslag en inloggen worden later aangesloten.
+              Leden aanmaken en bewerken kan lokaal in deze browser. Inloggen
+              volgt later.
             </p>
             <Button asChild variant="outline">
               <Link href="/leden">
@@ -143,7 +147,7 @@ export default function Dashboard() {
               {members.slice(0, 4).map((m) => (
                 <tr key={m.id}>
                   <td>
-                    <Link className="person-cell" href={`/leden/${m.id}`}>
+                    <Link className="person-cell" href={memberHref(m.id)}>
                       <Avatar name={fullName(m)} />
                       <strong>{fullName(m)}</strong>
                     </Link>
@@ -156,7 +160,7 @@ export default function Dashboard() {
                   <td>
                     <Link
                       aria-label={`Profiel van ${fullName(m)}`}
-                      href={`/leden/${m.id}`}
+                      href={memberHref(m.id)}
                     >
                       <ArrowUpRight size={17} />
                     </Link>
