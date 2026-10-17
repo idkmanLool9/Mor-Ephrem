@@ -120,3 +120,19 @@ Bij documenten opent **Bekijken** een lokaal afbeeldings- of PDF-voorbeeld. De b
 Bij lange tabbladrijen verschijnen **Meer tabbladen** en **Vorige tabbladen**. Deze knoppen ondersteunen de bestaande veeg- en toetsenbordbediening op smallere schermen.
 
 De aanvullende controles in `tests/refinements.spec.ts` testen zoeken, filters, lokale documentvoorbeelden, documentgegevens bewerken, oorspronkelijke downloadbytes en tabbladnavigatie. Voeg dit bestand ook toe aan het hierboven beschreven commando voor controles tegen de Pages-export.
+
+## Centrale werkruimtes en ledenwerktafel
+
+De hoofdmenukeuzes **Dossiers** en **Documenten** openen centrale overzichten van alle leden en gezinnen. Zoek op onderwerp, document, omschrijving of eigenaar en combineer dit met categorie-, status-, eigenaars- en bestandstypefilters. Open dossiers rechtstreeks, pas documentgegevens aan, bekijk/download bestanden of verwijder een lokaal document na bevestiging. Via de eigenaar gaat u naar het bijbehorende leden- of gezinsprofiel. Vanuit de centrale werkruimte kunt u ook een nieuw dossier of document aan een gekozen eigenaar toevoegen.
+
+Bij het eerste openen van een centrale werkruimte wordt **eenmalig** een fictieve voorbeeldset van zes dossiers en zes kleine, geldige PDF's toegevoegd. Titels en bestandsnamen zijn herkenbaar als voorbeelden. Bestaande eigen gegevens blijven staan. De marker `sampleVersion` voorkomt dat verwijderde voorbeelden later opnieuw verschijnen; als de voorbeeldset niet in de lokale documentlimiet past, wordt een melding getoond zonder bestaande documenten te vervangen. Het dashboard verwijst zichtbaar naar de nieuwe werkruimtes. De interface toont versie 0.4.
+
+Het ledenregister is nu een **ledenwerktafel**:
+
+- **Kolommen:** kies zichtbare adres-, contact-, gezins- en lidmaatschapskolommen. De naam blijft altijd zichtbaar. De keuze wordt in deze browser bewaard.
+- **Sorteren:** naam in beide richtingen, lidnummer, woonplaats, lid sinds en status. Sorteren kan ook via de relevante tabelkoppen.
+- **Selecteren:** kies afzonderlijke leden, de huidige pagina of alle gefilterde resultaten. Selecties blijven over meerdere pagina's behouden. Een andere zoekopdracht of filter wist de actuele selectie om onbedoelde wijzigingen te voorkomen.
+- **Bewaarde selecties:** geef een vaste groep leden een naam en open deze later opnieuw. Het betreft de gekozen lidnummers, geen automatisch veranderende filterregel. Wissen van een bewaarde selectie verwijdert geen leden.
+- **Bulkbewerking:** wijzig status, type lidmaatschap of contactvoorkeur. De controle toont per geselecteerd lid de oude en nieuwe waarde; pas de tweede bevestiging slaat de wijziging op. Gezinskoppelingen en adressen vallen buiten deze bulkactie. De wijziging wordt in één opslagbewerking uitgevoerd. Als de browseropslag faalt of een geselecteerd lid intussen in een ander tabblad is gewijzigd, wordt de bulkactie geblokkeerd.
+
+Kolommen en bewaarde groepen staan afzonderlijk in `antioch.member-workspace.v1`; de administratie en documenten blijven in `antioch.administration.v2`. De browsercontroles in `tests/workspaces.spec.ts` testen de centrale werkruimtes, voorbeelden, filters, bewaarde selecties en gecontroleerde bulkacties op desktop en iPad. Dit bestand kan ook met `GITHUB_PAGES_TEST=true` tegen de Pages-export worden uitgevoerd.

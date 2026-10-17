@@ -12,6 +12,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Layers3,
+  FolderOpen,
+  Files,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,8 @@ const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leden", label: "Ledenregister", icon: Users },
   { href: "/gezinnen", label: "Gezinsregister", icon: House },
+  { href: "/dossiers", label: "Dossiers", icon: FolderOpen },
+  { href: "/documenten", label: "Documenten", icon: Files },
 ];
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -101,7 +105,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 ? "Ledenregister"
                 : path.startsWith("/gezinnen")
                   ? "Gezinsregister"
-                  : "Dashboard"}
+                  : path.startsWith("/dossiers")
+                    ? "Dossiers"
+                    : path.startsWith("/documenten")
+                      ? "Documenten"
+                      : "Dashboard"}
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -115,7 +123,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <main>{children}</main>
         <footer>
           Antioch Administration{" "}
-          <span>Versie 0.1 · Fictieve demonstratiegegevens</span>
+          <span>Versie 0.4 · Fictieve demonstratiegegevens</span>
         </footer>
       </div>
     </div>

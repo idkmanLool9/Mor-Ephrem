@@ -8,6 +8,8 @@ import {
   ArrowRight,
   ClipboardList,
   ArrowUpRight,
+  FolderOpen,
+  Files,
 } from "lucide-react";
 import { activities, date, fullName } from "@/lib/data";
 import { PageHeading, Card, Avatar, Status } from "@/components/shared";
@@ -24,6 +26,39 @@ export default function Dashboard() {
       >
         <span className="date-label">Demogegevens · oktober 2026</span>
       </PageHeading>
+      <section className="release-workspace">
+        <div>
+          <span className="eyebrow">NIEUW · CENTRALE WERKRUIMTES</span>
+          <h2>Alle dossiers en documenten binnen handbereik.</h2>
+          <p>
+            Open de nieuwe werkruimtes met fictieve voorbeelden, of stel uw
+            eigen ledenwerktafel samen.
+          </p>
+        </div>
+        <div className="release-links">
+          <Link href="/dossiers">
+            <FolderOpen size={20} />
+            <span>
+              Dossiers<strong>Centrale opvolging</strong>
+            </span>
+            <ArrowUpRight size={18} />
+          </Link>
+          <Link href="/documenten">
+            <Files size={20} />
+            <span>
+              Documenten<strong>Alle bestanden doorzoeken</strong>
+            </span>
+            <ArrowUpRight size={18} />
+          </Link>
+          <Link href="/leden">
+            <Users size={20} />
+            <span>
+              Ledenwerktafel<strong>Kolommen, selecties en bulkacties</strong>
+            </span>
+            <ArrowUpRight size={18} />
+          </Link>
+        </div>
+      </section>
       <div className="stats-grid">
         {[
           {

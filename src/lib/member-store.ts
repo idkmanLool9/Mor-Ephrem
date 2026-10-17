@@ -1,4 +1,5 @@
 "use client";
+import { demoRecords } from "@/lib/demo-records";
 import { useSyncExternalStore } from "react";
 import {
   members as examples,
@@ -38,7 +39,8 @@ export type Document = {
   base64: string;
   createdAt: string;
 };
-type Administration = {
+export type Administration = {
+  sampleVersion?: number;
   members: Member[];
   families: Family[];
   notes: Note[];
@@ -394,4 +396,95 @@ export function familyHref(id: string) {
   return exampleFamilies.some((f) => f.id === id)
     ? `/gezinnen/${id}`
     : `/gezinnen/lokaal?id=${encodeURIComponent(id)}`;
+}
+
+/** Add the central workspace's labelled example set once, without replacing local work. */
+export function ensureWorkspaceExamples(): string | null {
+  const current = getSnapshot();
+  if (current.sampleVersion === 1) return null;
+  const cases: Case[] = demoRecords.map((r) => ({
+    id: `voorbeeld-dossier-${r.index + 1}`,
+    scope: { kind: r.kind, id: r.owner },
+    title: `${r.title} (voorbeeld)`,
+    description:
+      "Dit is een fictief voorbeelddossier. U kunt de behandelstatus aanpassen en de documenten bekijken.",
+    category: r.category,
+    status: r.status,
+    createdAt: `2026-10-${String(10 + r.index).padStart(2, "0")}T09:00:00.000Z`,
+    updatedAt: `2026-10-${String(10 + r.index).padStart(2, "0")}T09:00:00.000Z`,
+  }));
+  const documents: Document[] = demoRecords.map((r) => ({
+    id: `voorbeeld-document-${r.index + 1}`,
+    scope: { kind: r.kind, id: r.owner },
+    name: r.file,
+    category:
+      r.category === "Correspondentie" ? "Correspondentie" : "Formulier",
+    description: "Fictief demodocument voor de centrale werkruimte.",
+    caseId: `voorbeeld-dossier-${r.index + 1}`,
+    mime: "application/pdf",
+    ...r.document,
+    createdAt: `2026-10-${String(10 + r.index).padStart(2, "0")}T10:00:00.000Z`,
+  }));
+  if (
+    current.documents.reduce((sum, document) => sum + document.size, 0) +
+      documents
+        .filter(
+          (d) => !current.documents.some((existing) => existing.id === d.id),
+        )
+        .reduce((sum, document) => sum + document.size, 0) >
+    2 * 1024 * 1024
+  )
+    return "De voorbeeldset past niet meer in de lokale documentopslag. Uw bestaande documenten blijven behouden.";
+  return persist({
+    ...current,
+    sampleVersion: 1,
+    cases: [
+      ...current.cases,
+      ...cases.filter(
+        (c) => !current.cases.some((existing) => existing.id === c.id),
+      ),
+    ],
+    documents: [
+      ...current.documents,
+      ...documents.filter(
+        (d) => !current.documents.some((existing) => existing.id === d.id),
+      ),
+    ],
+  });
+}
+export type BulkField = "status" | "membershipType" | "contactPreference";
+export function bulkUpdateMembers(
+  ids: string[],
+  field: BulkField,
+  value: string,
+  expected: Member[],
+): string | null {
+  const allowed: Record<BulkField, string[]> = {
+    status: ["Actief", "Inactief"],
+    membershipType: ["Regulier", "Jeugdlid", "Gastlid", "Overig"],
+    contactPreference: ["Geen voorkeur", "E-mail", "Telefoon"],
+  };
+  if (
+    !ids.length ||
+    new Set(ids).size !== ids.length ||
+    !allowed[field]?.includes(value)
+  )
+    return "Kies geldige leden en een geldige wijziging.";
+  const current = getSnapshot();
+  if (
+    ids.some((id) => {
+      const live = current.members.find((m) => m.id === id),
+        before = expected.find((m) => m.id === id);
+      return (
+        !live || !before || JSON.stringify(live) !== JSON.stringify(before)
+      );
+    })
+  )
+    return "De ledengegevens zijn intussen veranderd. Sluit dit venster en controleer de selectie opnieuw.";
+  return persist({
+    ...current,
+    members: current.members.map((m) =>
+      ids.includes(m.id) ? { ...m, [field]: value } : m,
+    ),
+  });
 }

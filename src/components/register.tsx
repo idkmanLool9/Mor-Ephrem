@@ -1,4 +1,5 @@
 "use client";
+import { MemberWorkbench } from "@/components/member-workbench";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -22,6 +23,13 @@ import {
 } from "@/lib/member-store";
 const PAGE_SIZE = 8;
 export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
+  return kind === "leden" ? (
+    <MemberWorkbench />
+  ) : (
+    <FamilyRegister kind="gezinnen" />
+  );
+}
+function FamilyRegister({ kind }: { kind: "leden" | "gezinnen" }) {
   const members = useMembers();
   const families = useFamilies();
   const [query, setQuery] = useState("");

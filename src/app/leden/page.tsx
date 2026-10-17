@@ -10,7 +10,7 @@ export default function Page() {
       <PageHeading
         eyebrow="REGISTERS"
         title="Ledenregister"
-        description="Alle leden, contactgegevens en lidmaatschappen op één plek."
+        description="Uw ledenwerktafel met eigen kolommen, bewaarde selecties en gecontroleerde bulkacties."
       >
         <Button asChild>
           <Link href="/leden/nieuw">

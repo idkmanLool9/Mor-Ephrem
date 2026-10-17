@@ -363,7 +363,7 @@ export function CasesPanel({ scope }: { scope: Scope }) {
     </section>
   );
 }
-function CaseForm({
+export function CaseForm({
   scope,
   record,
   onClose,
@@ -678,7 +678,7 @@ export function DocumentsPanel({ scope }: { scope: Scope }) {
     </section>
   );
 }
-function DocumentMetadataForm({
+export function DocumentMetadataForm({
   record,
   onClose,
 }: {
@@ -762,7 +762,7 @@ function DocumentMetadataForm({
     </form>
   );
 }
-function DocumentForm({
+export function DocumentForm({
   scope,
   onClose,
 }: {
