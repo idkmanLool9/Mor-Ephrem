@@ -105,3 +105,7 @@ export default async function Page({
     </>
   );
 }
+
+export function generateStaticParams() {
+  return families.map((item) => ({ id: item.id }));
+}

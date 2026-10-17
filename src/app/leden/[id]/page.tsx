@@ -20,3 +20,7 @@ export default async function Page({
   if (!member) notFound();
   return <MemberProfile member={member} />;
 }
+
+export function generateStaticParams() {
+  return members.map((item) => ({ id: item.id }));
+}

@@ -60,3 +60,17 @@ In de cloudomgeving is de standaardcache niet schrijfbaar. Gebruik daar `npm ci 
 Gebruik de bestaande checkout; een extra Git-worktree is niet nodig. Afhankelijkheden zijn vastgelegd in `package-lock.json`.
 
 Een al geïnstalleerde Chromium gebruiken kan met `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test`; dan is downloaden niet nodig.
+
+## GitHub Pages
+
+De workflow `.github/workflows/pages.yml` bouwt en publiceert automatisch bij pushes naar `main` en `feat/antioch-administration`. Kies in GitHub **Settings → Pages → Build and deployment → Source: GitHub Actions**. Start daarna indien nodig de workflow **Publiceer Antioch Administration** via **Actions → Run workflow** op de implementatiebranch.
+
+De website is na succesvolle publicatie beschikbaar op `https://idkmanlool9.github.io/Mor-Ephrem/`. De volledige demo wordt statisch geëxporteerd, inclusief alle leden- en gezinsprofielen. GitHub Pages draait geen Next.js-server; databaseopslag en server-side login worden hiermee niet gepubliceerd.
+
+Lokaal dezelfde export bouwen:
+
+```bash
+GITHUB_PAGES=true npm run build
+```
+
+De export staat in `out/`; assets en navigatie gebruiken het projectpad `/Mor-Ephrem`. Zonder `GITHUB_PAGES=true` blijven de normale ontwikkelserver en productiebuild beschikbaar.
