@@ -10,13 +10,14 @@ import {
   PanelLeftClose,
   Menu,
   ChevronRight,
-  ShieldCheck,
   Layers3,
   FolderOpen,
   Files,
   Palette,
 } from "lucide-react";
-import { Fragment, useState } from "react";
+import { useState } from "react";
+import { GlobalMemberSearch } from "@/components/global-member-search";
+import { useMembers } from "@/lib/member-store";
 import { cn } from "@/lib/utils";
 const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -28,6 +29,7 @@ const links = [
 ];
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const members = useMembers();
   const [open, setOpen] = useState(false);
   if (path.startsWith("/ontwerpen")) return <>{children}</>;
   return (
@@ -49,42 +51,34 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <PanelLeftClose size={22} />
         </button>
         <div className="workspace-identity">
-          <span className="workspace-identity-icon">
-            <House size={17} />
-          </span>
-          <span>
-            Administratie<small>Uw werkruimte</small>
-          </span>
-          <span className="workspace-identity-badge">DEMO</span>
+          <span className="workspace-identity-icon">A</span>
+          <span>Administratie</span>
+          <ChevronRight className="workspace-chevron" size={14} />
         </div>
-        <div className="nav-label">OVERZICHT</div>
+        <div className="nav-label">Hoofdmenu</div>
         <nav aria-label="Hoofdnavigatie">
-          {links.map(({ href, label, icon: Icon }, index) => (
-            <Fragment key={href}>
-              {index === 1 && (
-                <div className="nav-label nav-section-label">REGISTERS</div>
+          {links.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className={cn(
+                "nav-item",
+                (href === "/" ? path === "/" : path.startsWith(href)) &&
+                  "nav-active",
               )}
-              {index === 3 && (
-                <div className="nav-label nav-section-label">WERKRUIMTES</div>
+            >
+              <Icon size={19} />
+              <span>{label}</span>
+              {href === "/leden" && (
+                <span aria-hidden="true" className="nav-member-count">
+                  {members.length}
+                </span>
               )}
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "nav-item",
-                  (href === "/" ? path === "/" : path.startsWith(href)) &&
-                    "nav-active",
-                )}
-              >
-                <Icon size={19} />
-                <span>{label}</span>
-                <ChevronRight size={14} className="nav-chevron" />
-              </Link>
-            </Fragment>
+            </Link>
           ))}
           <div className="nav-divider" />
-          <div className="nav-label">IN ONTWIKKELING</div>
+          <div className="nav-label">Uitvaartbeheer</div>
           {[
             { label: "Grafregister", icon: Archive },
             { label: "Begraafplaats", icon: Map },
@@ -97,9 +91,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <ShieldCheck size={18} />
+          <span className="sidebar-user-avatar">AB</span>
           <div>
-            Demonstratieomgeving<small>Uitsluitend fictieve gegevens</small>
+            Administratie<small>Demonstratieomgeving</small>
           </div>
         </div>
       </aside>
@@ -134,21 +128,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
                       : "Dashboard"}
             </span>
           </div>
+          <GlobalMemberSearch />
           <div className="flex items-center gap-3">
             <span className="demo-label">
               <span />
               Demonstratie
             </span>
             <span className="avatar avatar-small">AB</span>
-            <div className="user-label">
-              Administratie<small>Beheerder · demo</small>
-            </div>
+            <div className="user-label">Fictieve voorbeeldgegevens</div>
           </div>
         </header>
         <main>{children}</main>
         <footer>
           Antioch Administration{" "}
-          <span>Versie 0.5 · Fictieve demonstratiegegevens</span>
+          <span>Compact · Fictieve demonstratiegegevens</span>
         </footer>
       </div>
     </div>

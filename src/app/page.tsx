@@ -49,9 +49,9 @@ export default function Dashboard() {
             ANTIOCH ADMINISTRATION
           </div>
           <h2>
-            Een helder beeld.
+            Uw administratie.
             <br />
-            Een goed begin.
+            Alles bij de hand.
           </h2>
           <p>
             Van een eerste inschrijving tot een compleet gezinsdossier. Alles

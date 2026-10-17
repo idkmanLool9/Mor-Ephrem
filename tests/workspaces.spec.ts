@@ -190,7 +190,7 @@ test("column choices and saved member groups survive reload and can be removed",
     page.getByText("5 leden geselecteerd", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Selectie sluiten" }).click();
-  await expect(page.locator("tbody tr")).toHaveCount(8);
+  await expect(page.locator("tbody tr")).toHaveCount(10);
   await page.getByLabel("Bewaarde selectie", { exact: true }).selectOption(id!);
   page.once("dialog", (dialog) => dialog.accept());
   await page
@@ -258,7 +258,7 @@ test("changing filters clears picked members, and bulk storage failures do not c
     .getByRole("checkbox", { name: "Selecteer deze pagina", exact: true })
     .check();
   await expect(
-    page.getByText("8 leden geselecteerd", { exact: true }),
+    page.getByText("10 leden geselecteerd", { exact: true }),
   ).toBeVisible();
   await page
     .getByLabel("Woonplaats", { exact: true })
@@ -304,7 +304,7 @@ test("cross-page selection and sorting work without widening narrow screens", as
     .getByRole("checkbox", { name: "Selecteer deze pagina", exact: true })
     .check();
   await expect(
-    page.getByText("16 leden geselecteerd", { exact: true }),
+    page.getByText("20 leden geselecteerd", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Selecteer alle 24 resultaten" })

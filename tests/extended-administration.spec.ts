@@ -197,6 +197,8 @@ test("case status and linked document upload, download and deletion persist", as
     .getByLabel("Omschrijving", { exact: true })
     .fill("Fictief document voor de adrescontrole.");
   await dialog.getByRole("button", { name: "Document opslaan" }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(panel(page)).toContainText("Dossier: Adrescontrole demo");
   await page.reload();
   await page.getByRole("tab", { name: /Documenten/ }).click();
   await expect(panel(page)).toContainText("Dossier: Adrescontrole demo");

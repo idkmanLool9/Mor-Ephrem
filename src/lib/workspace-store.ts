@@ -4,6 +4,7 @@ export const memberColumns = [
   { id: "id", label: "Lidnummer" },
   { id: "address", label: "Adres" },
   { id: "city", label: "Woonplaats" },
+  { id: "parish", label: "Parochie" },
   { id: "status", label: "Status" },
   { id: "email", label: "E-mailadres" },
   { id: "phone", label: "Telefoon" },
@@ -20,7 +21,7 @@ export type SavedSelection = {
 };
 type Workspace = { columns: ColumnId[]; selections: SavedSelection[] };
 const defaults: Workspace = {
-  columns: ["id", "address", "city", "status"],
+  columns: ["id", "city", "parish", "status", "joined"],
   selections: [],
 };
 const KEY = "antioch.member-workspace.v1";

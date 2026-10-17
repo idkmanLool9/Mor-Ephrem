@@ -11,6 +11,10 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownUp,
+  Users,
+  FolderOpen,
+  House,
+  PanelRightOpen,
 } from "lucide-react";
 import { fullName, date, type Member } from "@/lib/data";
 import { matchesSearch } from "@/lib/search";
@@ -33,7 +37,7 @@ import {
 import { Avatar, Status } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/modal";
-const PAGE_SIZE = 8;
+import { MemberInspector, parishOf } from "@/components/member-inspector";
 const fieldLabels: Record<BulkField, string> = {
   status: "Status",
   membershipType: "Type lidmaatschap",
@@ -48,11 +52,14 @@ export function MemberWorkbench() {
   const members = useMembers(),
     families = useFamilies(),
     workspace = useMemberWorkspace();
+  const [focusedId, setFocusedId] = useState<string | null>("L-1001");
+  const [pageSize, setPageSize] = useState(10);
+  const [parish, setParish] = useState("Alle parochies");
   const [query, setQuery] = useState(""),
     [city, setCity] = useState("Alle woonplaatsen"),
     [status, setStatus] = useState("Alle statussen"),
     [familyFilter, setFamilyFilter] = useState("Alle gezinnen"),
-    [sort, setSort] = useState("name"),
+    [sort, setSort] = useState("id"),
     [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]),
     [active, setActive] = useState<SavedSelection | null>(null),
@@ -69,6 +76,7 @@ export function MemberWorkbench() {
     setCity("Alle woonplaatsen");
     setStatus("Alle statussen");
     setFamilyFilter("Alle gezinnen");
+    setParish("Alle parochies");
     setPage(1);
     clearPicked();
   }
@@ -106,12 +114,13 @@ export function MemberWorkbench() {
         ) &&
         (city === "Alle woonplaatsen" || m.city === city) &&
         (status === "Alle statussen" || m.status === status) &&
-        (familyFilter === "Alle gezinnen" || m.familyId === familyFilter),
+        (familyFilter === "Alle gezinnen" || m.familyId === familyFilter) &&
+        (parish === "Alle parochies" || parishOf(m) === parish),
     )
     .sort(compare);
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE)),
+  const pages = Math.max(1, Math.ceil(rows.length / pageSize)),
     current = Math.min(page, pages),
-    visible = rows.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+    visible = rows.slice((current - 1) * pageSize, current * pageSize);
   const picked = selected.filter((id) => members.some((m) => m.id === id));
   const allPage =
     visible.length > 0 && visible.every((m) => picked.includes(m.id));
@@ -120,7 +129,8 @@ export function MemberWorkbench() {
     !!query ||
     city !== "Alle woonplaatsen" ||
     status !== "Alle statussen" ||
-    familyFilter !== "Alle gezinnen";
+    familyFilter !== "Alle gezinnen" ||
+    parish !== "Alle parochies";
   function applySaved(value: string) {
     const saved = workspace.selections.find((s) => s.id === value) ?? null;
     setActive(saved);
@@ -131,6 +141,7 @@ export function MemberWorkbench() {
       );
   }
   function value(m: Member, column: ColumnId) {
+    if (column === "parish") return parishOf(m);
     if (column === "status") return <Status status={m.status} />;
     if (column === "family")
       return families.find((f) => f.id === m.familyId)?.name ?? m.familyId;
@@ -147,441 +158,514 @@ export function MemberWorkbench() {
       ) ?? "",
     );
   }
+  const focused = members.find((m) => m.id === focusedId);
   return (
-    <section className="card member-workbench">
-      <div className="workbench-heading">
-        <div>
-          <span className="eyebrow">LEDENWERKTAFEL</span>
-          <h2>Uw register, uw werkwijze</h2>
-          <p>
-            Kies kolommen, bewaar groepen en werk meerdere leden gecontroleerd
-            bij.
-          </p>
-        </div>
-        <div className="workbench-tools">
-          <details className="column-picker">
-            <summary>
-              <Columns3 size={16} />
-              Kolommen
-              <span className="count-pill">{workspace.columns.length + 1}</span>
-            </summary>
-            <div className="column-options">
-              <strong>Zichtbare kolommen</strong>
-              <label>
-                <input type="checkbox" checked disabled />
-                Naam (vast)
-              </label>
-              {memberColumns.map((c) => (
-                <label key={c.id}>
-                  <input
-                    type="checkbox"
-                    aria-label={`Kolom ${c.label}`}
-                    checked={workspace.columns.includes(c.id)}
-                    onChange={() => toggleColumn(c.id)}
-                  />
-                  {c.label}
-                </label>
-              ))}
-            </div>
-          </details>
-          <Button
-            variant="outline"
-            onClick={() => setSaving(true)}
-            disabled={!picked.length}
-          >
-            <Bookmark size={16} />
-            Selectie bewaren
-          </Button>
-        </div>
-      </div>
-      <div className="saved-selection-strip">
-        <label>
-          <Bookmark size={16} />
-          Bewaarde selectie
-          <select
-            aria-label="Bewaarde selectie"
-            value={active?.id ?? ""}
-            onChange={(e) => applySaved(e.target.value)}
-          >
-            <option value="">Alle leden</option>
-            {workspace.selections.map((s) => (
-              <option value={s.id} key={s.id}>
-                {s.name} ({s.memberIds.length})
-              </option>
-            ))}
-          </select>
-        </label>
-        {active ? (
-          <>
-            <span>Vaste groep: {active.memberIds.length} leden</span>
-            <Button variant="ghost" size="sm" onClick={() => applySaved("")}>
-              Selectie sluiten
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Bewaarde selectie ‘${active.name}’ verwijderen?`,
-                  )
-                ) {
-                  const problem = deleteSelection(active.id);
-                  setError(problem ?? "");
-                  if (!problem) applySaved("");
-                }
-              }}
-            >
-              Bewaarde selectie verwijderen
-            </Button>
-          </>
-        ) : (
-          <span>Selecteer leden met de vakjes om een groep te bewaren.</span>
-        )}
-      </div>
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
-      )}
-      {message && (
-        <p role="status" className="success-notice">
-          {message}
-        </p>
-      )}
-      <div className="register-tools">
-        <div className="search-field">
-          <Search size={18} />
-          <input
-            aria-label="Leden zoeken"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-              clearPicked();
-            }}
-            placeholder="Zoek op naam, nummer, adres of eigen veld…"
-          />
-          {query && (
-            <button
-              aria-label="Zoekopdracht wissen"
-              onClick={() => {
-                setQuery("");
-                setPage(1);
-                clearPicked();
-              }}
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-        <select
-          aria-label="Woonplaats"
-          value={city}
-          onChange={(e) => {
-            setCity(e.target.value);
-            setPage(1);
-            clearPicked();
-          }}
-        >
-          {[
-            "Alle woonplaatsen",
-            ...Array.from(new Set(members.map((m) => m.city))).sort(),
-          ].map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Lidmaatschapsstatus"
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            setPage(1);
-            clearPicked();
-          }}
-        >
-          {["Alle statussen", "Actief", "Inactief"].map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Gezinsfilter"
-          value={familyFilter}
-          onChange={(e) => {
-            setFamilyFilter(e.target.value);
-            setPage(1);
-            clearPicked();
-          }}
-        >
-          <option>Alle gezinnen</option>
-          {families.map((f) => (
-            <option value={f.id} key={f.id}>
-              Familie {f.name} · {f.id}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="register-summary">
-        <span aria-live="polite">
-          <strong>{rows.length}</strong> leden gevonden
-          {filtered && (
-            <button className="reset" onClick={reset}>
-              Filters wissen
-            </button>
-          )}
-        </span>
-        <label>
-          Sorteer op{" "}
-          <select
-            aria-label="Sortering"
-            value={sort}
-            onChange={(e) => {
-              setSort(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="name">Naam (A–Z)</option>
-            <option value="name-desc">Naam (Z–A)</option>
-            <option value="id">Nummer</option>
-            <option value="city">Woonplaats</option>
-            <option value="joined-desc">Lid sinds (nieuwste)</option>
-            <option value="status">Status</option>
-          </select>
-        </label>
-      </div>
-      {!!picked.length && (
-        <div className="bulk-toolbar">
-          <span>
-            <CheckSquare size={18} />
-            <strong>{picked.length} leden geselecteerd</strong>
-            <small>
-              Ook geselecteerde leden op andere pagina’s tellen mee.
-            </small>
-          </span>
-          <div className="heading-actions">
-            {rows.some((m) => !picked.includes(m.id)) && (
+    <div className={`members-layout ${focused ? "with-inspector" : ""}`}>
+      <section className="card member-workbench">
+        <div className="workbench-heading">
+          <nav className="register-view-tabs" aria-label="Registeronderdelen">
+            <span aria-current="page">
+              <Users size={15} />
+              Alle leden
+            </span>
+            <Link href="/dossiers">
+              <FolderOpen size={15} />
+              Gekoppelde dossiers
+            </Link>
+            <Link href="/gezinnen">
+              <House size={15} />
+              Gezinnen
+            </Link>
+          </nav>
+          <div className="workbench-tools">
+            {!focused && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={() => setSelected(rows.map((m) => m.id))}
+                aria-label="Ledenpaneel openen"
+                onClick={() =>
+                  setFocusedId(visible[0]?.id ?? members[0]?.id ?? null)
+                }
               >
-                Selecteer alle {rows.length} resultaten
+                <PanelRightOpen size={16} />
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setSelected([])}>
-              Selectie wissen
-            </Button>
-            <Button size="sm" onClick={() => setBulk(true)}>
-              Geselecteerde leden wijzigen
+            <details className="column-picker">
+              <summary>
+                <Columns3 size={16} />
+                Kolommen
+                <span className="count-pill">
+                  {workspace.columns.length + 1}
+                </span>
+              </summary>
+              <div className="column-options">
+                <strong>Zichtbare kolommen</strong>
+                <label>
+                  <input type="checkbox" checked disabled />
+                  Naam (vast)
+                </label>
+                {memberColumns.map((c) => (
+                  <label key={c.id}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Kolom ${c.label}`}
+                      checked={workspace.columns.includes(c.id)}
+                      onChange={() => toggleColumn(c.id)}
+                    />
+                    {c.label}
+                  </label>
+                ))}
+              </div>
+            </details>
+            <Button
+              variant="outline"
+              onClick={() => setSaving(true)}
+              disabled={!picked.length}
+            >
+              <Bookmark size={16} />
+              Selectie bewaren
             </Button>
           </div>
         </div>
-      )}
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th className="selection-cell">
-                <input
-                  type="checkbox"
-                  aria-label="Selecteer deze pagina"
-                  checked={allPage}
-                  ref={(element) => {
-                    if (element)
-                      element.indeterminate =
-                        !allPage && visible.some((m) => picked.includes(m.id));
-                  }}
-                  onChange={() =>
-                    setSelected(
-                      allPage
-                        ? picked.filter(
-                            (id) => !visible.some((m) => m.id === id),
-                          )
-                        : [
-                            ...new Set([
-                              ...picked,
-                              ...visible.map((m) => m.id),
-                            ]),
-                          ],
+        <div className="saved-selection-strip">
+          <label>
+            <Bookmark size={16} />
+            Bewaarde selectie
+            <select
+              aria-label="Bewaarde selectie"
+              value={active?.id ?? ""}
+              onChange={(e) => applySaved(e.target.value)}
+            >
+              <option value="">Alle leden</option>
+              {workspace.selections.map((s) => (
+                <option value={s.id} key={s.id}>
+                  {s.name} ({s.memberIds.length})
+                </option>
+              ))}
+            </select>
+          </label>
+          {active ? (
+            <>
+              <span>Vaste groep: {active.memberIds.length} leden</span>
+              <Button variant="ghost" size="sm" onClick={() => applySaved("")}>
+                Selectie sluiten
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Bewaarde selectie ‘${active.name}’ verwijderen?`,
                     )
+                  ) {
+                    const problem = deleteSelection(active.id);
+                    setError(problem ?? "");
+                    if (!problem) applySaved("");
                   }
-                />
-              </th>
-              <th
-                aria-sort={
-                  sort === "name"
-                    ? "ascending"
-                    : sort === "name-desc"
-                      ? "descending"
-                      : "none"
-                }
+                }}
               >
-                <button
-                  className="sort-heading"
-                  onClick={() => {
-                    setSort(sort === "name" ? "name-desc" : "name");
-                    setPage(1);
-                  }}
+                Bewaarde selectie verwijderen
+              </Button>
+            </>
+          ) : (
+            <span>Selecteer leden met de vakjes om een groep te bewaren.</span>
+          )}
+        </div>
+        {error && (
+          <p role="alert" className="form-error">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p role="status" className="success-notice">
+            {message}
+          </p>
+        )}
+        <div className="register-tools">
+          <div className="search-field">
+            <Search size={18} />
+            <input
+              aria-label="Leden zoeken"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+                clearPicked();
+              }}
+              placeholder="Zoek op naam, lidnummer, woonplaats…"
+            />
+            {query && (
+              <button
+                aria-label="Zoekopdracht wissen"
+                onClick={() => {
+                  setQuery("");
+                  setPage(1);
+                  clearPicked();
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+          <select
+            aria-label="Woonplaats"
+            value={city}
+            onChange={(e) => {
+              setCity(e.target.value);
+              setPage(1);
+              clearPicked();
+            }}
+          >
+            {[
+              "Alle woonplaatsen",
+              ...Array.from(new Set(members.map((m) => m.city))).sort(),
+            ].map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Lidmaatschapsstatus"
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+              clearPicked();
+            }}
+          >
+            {["Alle statussen", "Actief", "Inactief"].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Parochie"
+            value={parish}
+            onChange={(e) => {
+              setParish(e.target.value);
+              setPage(1);
+              clearPicked();
+            }}
+          >
+            {[
+              "Alle parochies",
+              ...Array.from(new Set(members.map(parishOf))).sort(),
+            ].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Gezinsfilter"
+            value={familyFilter}
+            onChange={(e) => {
+              setFamilyFilter(e.target.value);
+              setPage(1);
+              clearPicked();
+            }}
+          >
+            <option>Alle gezinnen</option>
+            {families.map((f) => (
+              <option value={f.id} key={f.id}>
+                Familie {f.name} · {f.id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="register-summary">
+          <span aria-live="polite">
+            <strong>{rows.length}</strong> leden gevonden
+            {filtered && (
+              <button className="reset" onClick={reset}>
+                Filters wissen
+              </button>
+            )}
+          </span>
+          <label>
+            Sorteer op{" "}
+            <select
+              aria-label="Sortering"
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="name">Naam (A–Z)</option>
+              <option value="name-desc">Naam (Z–A)</option>
+              <option value="id">Nummer</option>
+              <option value="city">Woonplaats</option>
+              <option value="joined-desc">Lid sinds (nieuwste)</option>
+              <option value="status">Status</option>
+            </select>
+          </label>
+        </div>
+        {!!picked.length && (
+          <div className="bulk-toolbar">
+            <span>
+              <CheckSquare size={18} />
+              <strong>{picked.length} leden geselecteerd</strong>
+              <small>
+                Ook geselecteerde leden op andere pagina’s tellen mee.
+              </small>
+            </span>
+            <div className="heading-actions">
+              {rows.some((m) => !picked.includes(m.id)) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelected(rows.map((m) => m.id))}
                 >
-                  Naam
-                  <ArrowDownUp size={12} />
-                </button>
-              </th>
-              {columns.map((c) => (
+                  Selecteer alle {rows.length} resultaten
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setSelected([])}>
+                Selectie wissen
+              </Button>
+              <Button size="sm" onClick={() => setBulk(true)}>
+                Geselecteerde leden wijzigen
+              </Button>
+            </div>
+          </div>
+        )}
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th className="selection-cell">
+                  <input
+                    type="checkbox"
+                    aria-label="Selecteer deze pagina"
+                    checked={allPage}
+                    ref={(element) => {
+                      if (element)
+                        element.indeterminate =
+                          !allPage &&
+                          visible.some((m) => picked.includes(m.id));
+                    }}
+                    onChange={() =>
+                      setSelected(
+                        allPage
+                          ? picked.filter(
+                              (id) => !visible.some((m) => m.id === id),
+                            )
+                          : [
+                              ...new Set([
+                                ...picked,
+                                ...visible.map((m) => m.id),
+                              ]),
+                            ],
+                      )
+                    }
+                  />
+                </th>
                 <th
-                  key={c.id}
                   aria-sort={
-                    (c.id === "id" && sort === "id") ||
-                    (c.id === "city" && sort === "city") ||
-                    (c.id === "status" && sort === "status")
+                    sort === "name"
                       ? "ascending"
-                      : c.id === "joined" && sort === "joined-desc"
+                      : sort === "name-desc"
                         ? "descending"
                         : "none"
                   }
                 >
-                  {(["id", "city", "joined", "status"] as string[]).includes(
-                    c.id,
-                  ) ? (
-                    <button
-                      className="sort-heading"
-                      onClick={() => {
-                        setSort(c.id === "joined" ? "joined-desc" : c.id);
-                        setPage(1);
-                      }}
-                    >
-                      {c.label}
-                      <ArrowDownUp size={12} />
-                    </button>
-                  ) : (
-                    c.label
-                  )}
-                </th>
-              ))}
-              <th>
-                <span className="sr-only">Profiel</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((m) => (
-              <tr
-                key={m.id}
-                className={picked.includes(m.id) ? "selected-row" : ""}
-              >
-                <td className="selection-cell">
-                  <input
-                    type="checkbox"
-                    aria-label={`Selecteer ${fullName(m)} ${m.id}`}
-                    checked={picked.includes(m.id)}
-                    onChange={() =>
-                      setSelected(
-                        picked.includes(m.id)
-                          ? picked.filter((id) => id !== m.id)
-                          : [...picked, m.id],
-                      )
-                    }
-                  />
-                </td>
-                <td>
-                  <Link className="person-cell" href={memberHref(m.id)}>
-                    <Avatar name={fullName(m)} />
-                    <div>
-                      <strong>{fullName(m)}</strong>
-                      <small>Profiel bekijken</small>
-                    </div>
-                  </Link>
-                </td>
-                {columns.map((c) => (
-                  <td key={c.id}>{value(m, c.id)}</td>
-                ))}
-                <td>
-                  <Link
-                    className="row-link"
-                    aria-label={`Bekijk ${fullName(m)}`}
-                    href={memberHref(m.id)}
+                  <button
+                    className="sort-heading"
+                    onClick={() => {
+                      setSort(sort === "name" ? "name-desc" : "name");
+                      setPage(1);
+                    }}
                   >
-                    <ArrowUpRight size={17} />
-                  </Link>
-                </td>
+                    Naam
+                    <ArrowDownUp size={12} />
+                  </button>
+                </th>
+                {columns.map((c) => (
+                  <th
+                    key={c.id}
+                    aria-sort={
+                      (c.id === "id" && sort === "id") ||
+                      (c.id === "city" && sort === "city") ||
+                      (c.id === "status" && sort === "status")
+                        ? "ascending"
+                        : c.id === "joined" && sort === "joined-desc"
+                          ? "descending"
+                          : "none"
+                    }
+                  >
+                    {(["id", "city", "joined", "status"] as string[]).includes(
+                      c.id,
+                    ) ? (
+                      <button
+                        className="sort-heading"
+                        onClick={() => {
+                          setSort(c.id === "joined" ? "joined-desc" : c.id);
+                          setPage(1);
+                        }}
+                      >
+                        {c.label}
+                        <ArrowDownUp size={12} />
+                      </button>
+                    ) : (
+                      c.label
+                    )}
+                  </th>
+                ))}
+                <th>
+                  <span className="sr-only">Profiel</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!rows.length && (
-        <div className="empty-state">
-          <Search size={28} />
-          <h2>Geen resultaten gevonden</h2>
-          <p>Probeer een andere zoekopdracht of wis de filters.</p>
-          <Button variant="outline" onClick={reset}>
-            Filters wissen
-          </Button>
+            </thead>
+            <tbody>
+              {visible.map((m) => (
+                <tr
+                  key={m.id}
+                  className={[
+                    picked.includes(m.id) ? "selected-row" : "",
+                    focusedId === m.id ? "focused-member" : "",
+                  ].join(" ")}
+                >
+                  <td className="selection-cell">
+                    <input
+                      type="checkbox"
+                      aria-label={`Selecteer ${fullName(m)} ${m.id}`}
+                      checked={picked.includes(m.id)}
+                      onChange={() =>
+                        setSelected(
+                          picked.includes(m.id)
+                            ? picked.filter((id) => id !== m.id)
+                            : [...picked, m.id],
+                        )
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button
+                      className="person-cell member-preview-trigger"
+                      aria-label={`Toon profiel van ${fullName(m)}`}
+                      aria-pressed={focusedId === m.id}
+                      onClick={() => setFocusedId(m.id)}
+                    >
+                      <Avatar name={fullName(m)} />
+                      <div>
+                        <strong>{fullName(m)}</strong>
+                      </div>
+                    </button>
+                  </td>
+                  {columns.map((c) => (
+                    <td key={c.id}>{value(m, c.id)}</td>
+                  ))}
+                  <td>
+                    <Link
+                      className="row-link"
+                      aria-label={`Bekijk ${fullName(m)}`}
+                      href={memberHref(m.id)}
+                    >
+                      <ArrowUpRight size={17} />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
-      <div className="pagination">
-        <span>
-          {rows.length
-            ? `${(current - 1) * PAGE_SIZE + 1}–${Math.min(current * PAGE_SIZE, rows.length)} van ${rows.length}`
-            : "0 resultaten"}
-        </span>
-        <div className="heading-actions">
-          <Button
-            variant="outline"
-            size="sm"
-            aria-label="Vorige pagina"
-            disabled={current === 1}
-            onClick={() => setPage(current - 1)}
-          >
-            <ChevronLeft size={16} />
-          </Button>
-          {Array.from({ length: pages }, (_, index) => (
-            <Button
-              key={index}
-              size="sm"
-              variant={current === index + 1 ? "default" : "ghost"}
-              aria-label={`Pagina ${index + 1}`}
-              aria-current={current === index + 1 ? "page" : undefined}
-              onClick={() => setPage(index + 1)}
-            >
-              {index + 1}
+        {!rows.length && (
+          <div className="empty-state">
+            <Search size={28} />
+            <h2>Geen resultaten gevonden</h2>
+            <p>Probeer een andere zoekopdracht of wis de filters.</p>
+            <Button variant="outline" onClick={reset}>
+              Filters wissen
             </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            aria-label="Volgende pagina"
-            disabled={current === pages}
-            onClick={() => setPage(current + 1)}
-          >
-            <ChevronRight size={16} />
-          </Button>
+          </div>
+        )}
+        <div className="pagination">
+          <span>
+            {picked.length > 0 && (
+              <strong>
+                {picked.length} van {members.length} geselecteerd ·{" "}
+              </strong>
+            )}
+            {rows.length
+              ? `${(current - 1) * pageSize + 1}–${Math.min(current * pageSize, rows.length)} van ${rows.length}`
+              : "0 resultaten"}
+          </span>
+          <div className="heading-actions">
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Vorige pagina"
+              disabled={current === 1}
+              onClick={() => setPage(current - 1)}
+            >
+              <ChevronLeft size={16} />
+            </Button>
+            {Array.from({ length: pages }, (_, index) => (
+              <Button
+                key={index}
+                size="sm"
+                variant={current === index + 1 ? "default" : "ghost"}
+                aria-label={`Pagina ${index + 1}`}
+                aria-current={current === index + 1 ? "page" : undefined}
+                onClick={() => setPage(index + 1)}
+              >
+                {index + 1}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Volgende pagina"
+              disabled={current === pages}
+              onClick={() => setPage(current + 1)}
+            >
+              <ChevronRight size={16} />
+            </Button>
+            <select
+              aria-label="Leden per pagina"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+            >
+              {[10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size} per pagina
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
-      {saving && (
-        <Modal title="Selectie bewaren" onClose={() => setSaving(false)}>
-          <SaveSelectionForm ids={picked} onClose={() => setSaving(false)} />
-        </Modal>
+        {saving && (
+          <Modal title="Selectie bewaren" onClose={() => setSaving(false)}>
+            <SaveSelectionForm ids={picked} onClose={() => setSaving(false)} />
+          </Modal>
+        )}
+        {bulk && (
+          <Modal
+            title="Geselecteerde leden wijzigen"
+            onClose={() => setBulk(false)}
+          >
+            <BulkForm
+              ids={picked}
+              onCancel={() => setBulk(false)}
+              onSaved={(count) => {
+                setBulk(false);
+                setSelected([]);
+                setMessage(
+                  `${count} leden bijgewerkt. De wijziging is lokaal opgeslagen.`,
+                );
+              }}
+            />
+          </Modal>
+        )}
+      </section>
+      {focused && (
+        <MemberInspector
+          key={focused.id}
+          member={focused}
+          onClose={() => setFocusedId(null)}
+        />
       )}
-      {bulk && (
-        <Modal
-          title="Geselecteerde leden wijzigen"
-          onClose={() => setBulk(false)}
-        >
-          <BulkForm
-            ids={picked}
-            onCancel={() => setBulk(false)}
-            onSaved={(count) => {
-              setBulk(false);
-              setSelected([]);
-              setMessage(
-                `${count} leden bijgewerkt. De wijziging is lokaal opgeslagen.`,
-              );
-            }}
-          />
-        </Modal>
-      )}
-    </section>
+    </div>
   );
 }
 function SaveSelectionForm({

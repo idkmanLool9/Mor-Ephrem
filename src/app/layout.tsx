@@ -3,6 +3,7 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/manrope";
 import "./globals.css";
 import "./theme.css";
+import "./register-workspace.css";
 import { Shell } from "@/components/shell";
 export const metadata: Metadata = {
   title: {

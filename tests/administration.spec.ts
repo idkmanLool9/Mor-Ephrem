@@ -19,7 +19,7 @@ test("member search, combined filters, pagination and empty-state reset", async 
   page,
 }) => {
   await page.goto("/leden");
-  await expect(page.locator("tbody tr")).toHaveCount(8);
+  await expect(page.locator("tbody tr")).toHaveCount(10);
   await page.getByRole("button", { name: "Volgende pagina" }).click();
   await expect(
     page.getByRole("button", { name: "Pagina 2", exact: true }),
@@ -41,7 +41,7 @@ test("member search, combined filters, pagination and empty-state reset", async 
     .getByRole("button", { name: "Filters wissen", exact: true })
     .last()
     .click();
-  await expect(page.locator("tbody tr")).toHaveCount(8);
+  await expect(page.locator("tbody tr")).toHaveCount(10);
 });
 test("profile tabs and linked household", async ({ page }) => {
   await page.goto("/leden/L-1001");

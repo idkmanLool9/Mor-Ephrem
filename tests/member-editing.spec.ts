@@ -95,5 +95,5 @@ test("storage failure does not pretend to save and corrupted data does not crash
     page.getByRole("heading", { name: "Nieuw lid", exact: true }),
   ).toBeVisible();
   await open(page, "/leden/");
-  await expect(page.locator("tbody tr")).toHaveCount(8);
+  await expect(page.locator("tbody tr")).toHaveCount(10);
 });

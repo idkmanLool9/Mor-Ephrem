@@ -146,3 +146,11 @@ De browsertests controleren ook tekstcontrast op de belangrijkste schermen en co
 ### Ontwerpen vergelijken
 
 Open `/ontwerpen` (op GitHub Pages: `/Mor-Ephrem/ontwerpen/`) of kies **Ontwerpen vergelijken** in het menu. Vijf onafhankelijke stijlstudies tonen hetzelfde fictieve ledenregister: Compact, Vertrouwd, Verfijnd, Rustig en Werkplek. Zoeken, een statusfilter en een selecteerbaar ledenprofiel maken de verschillen in de browser zichtbaar. De voorbeelden bewaren geen gegevens en wijzigen de administratie niet; navigatieonderdelen binnen het voorbeeld zijn visueel. De teruglink opent de bestaande administratie.
+
+De werkende administratie gebruikt voorlopig richting **1 — Compact**: donkere compacte navigatie, fijnere tabelrijen, neutrale werkruimte en paarse accenten. De vijf stijlstudies blijven beschikbaar onder **Ontwerpen vergelijken**. Dit is een visuele wijziging; browseropslag en administratieve functies blijven behouden.
+
+### Ledenregister met zijpaneel
+
+Het register volgt de gekozen referentie: een compacte ledenlijst met filters en een ledenpaneel rechts, zonder samenvattingswidgets boven de lijst. Klik op een naam om contactgegevens, gezin, notities, gegevens, dossiers en voorbeeldactiviteiten te bekijken. Notities toevoegen werkt met dezelfde lokale opslag als het volledige profiel. Op iPad en mobiel staat het paneel onder het register. U kunt het paneel sluiten en opnieuw openen en 10, 20 of 50 leden per pagina kiezen.
+
+De algemene zoekbalk zoekt bestaande leden op naam, lidnummer, adres of woonplaats en opent hun profiel. Parochie gebruikt, indien ingevuld, het bestaande eigen veld `Parochie`. Ontbrekende waarden worden als ‘Niet vastgelegd’ getoond. De datumkolom is ‘Lid sinds’; er wordt geen fictieve datum voor een laatste wijziging als echte registratie getoond. Bestaande kolomvoorkeuren blijven behouden.

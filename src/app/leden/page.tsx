@@ -6,11 +6,11 @@ import { Register } from "@/components/register";
 export const metadata = { title: "Ledenregister" };
 export default function Page() {
   return (
-    <>
+    <div className="members-page">
       <PageHeading
         eyebrow="REGISTERS"
         title="Ledenregister"
-        description="Uw ledenwerktafel met eigen kolommen, bewaarde selecties en gecontroleerde bulkacties."
+        description="Een vertrouwde plek voor iedereen in uw administratie."
       >
         <Button asChild>
           <Link href="/leden/nieuw">
@@ -24,6 +24,6 @@ export default function Page() {
         Dit register bevat uitsluitend fictieve voorbeeldgegevens. Nieuwe leden
         en wijzigingen worden alleen in deze browser opgeslagen.
       </p>
-    </>
+    </div>
   );
 }

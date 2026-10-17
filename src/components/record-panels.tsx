@@ -162,7 +162,7 @@ export function NotesPanel({ scope }: { scope: Scope }) {
     </section>
   );
 }
-function NoteForm({
+export function NoteForm({
   scope,
   note,
   onClose,
