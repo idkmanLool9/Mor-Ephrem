@@ -9,6 +9,7 @@ import {
   Download,
   Trash2,
   Upload,
+  Eye,
 } from "lucide-react";
 import {
   useAdministration,
@@ -25,6 +26,12 @@ import {
   caseStatuses,
 } from "@/lib/member-store";
 import { Button } from "@/components/ui/button";
+import { matchesSearch } from "@/lib/search";
+import { RecordToolbar } from "@/components/record-toolbar";
+import {
+  DocumentPreview,
+  downloadDocument,
+} from "@/components/document-preview";
 import { Modal } from "@/components/modal";
 const timestamp = (value: string) =>
   new Intl.DateTimeFormat("nl-NL", {
@@ -56,9 +63,11 @@ function Empty({
   );
 }
 export function NotesPanel({ scope }: { scope: Scope }) {
-  const notes = useAdministration()
+  const allNotes = useAdministration()
     .notes.filter((n) => sameScope(n.scope, scope))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const [query, setQuery] = useState("");
+  const notes = allNotes.filter((n) => matchesSearch(query, n.title, n.body));
   const [edit, setEdit] = useState<Note | "new" | null>(null);
   const [error, setError] = useState("");
   return (
@@ -66,7 +75,7 @@ export function NotesPanel({ scope }: { scope: Scope }) {
       <div className="card-header">
         <div>
           <h2>
-            Notities <span className="count-pill">{notes.length}</span>
+            Notities <span className="count-pill">{allNotes.length}</span>
           </h2>
           <p className="section-description">
             Aantekeningen bij dit dossier · alleen in deze browser
@@ -77,6 +86,14 @@ export function NotesPanel({ scope }: { scope: Scope }) {
           Notitie toevoegen
         </Button>
       </div>
+      <RecordToolbar
+        label="Notities zoeken"
+        query={query}
+        onQuery={setQuery}
+        count={notes.length}
+        filtered={!!query}
+        onReset={() => setQuery("")}
+      />
       <ErrorMessage message={error} />
       {notes.length ? (
         <div className="record-list">
@@ -123,7 +140,9 @@ export function NotesPanel({ scope }: { scope: Scope }) {
         </div>
       ) : (
         <Empty
-          title="Nog geen notities"
+          title={
+            allNotes.length ? "Geen notities gevonden" : "Nog geen notities"
+          }
           description="Leg afspraken of administratieve aandachtspunten vast."
           icon={<StickyNote size={28} />}
         />
@@ -214,10 +233,15 @@ export function CasesPanel({ scope }: { scope: Scope }) {
   const records = useAdministration()
     .cases.filter((c) => sameScope(c.scope, scope))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Alle categorieën");
   const [edit, setEdit] = useState<Case | "new" | null>(null);
   const [filter, setFilter] = useState("Alle statussen");
   const visible = records.filter(
-    (c) => filter === "Alle statussen" || c.status === filter,
+    (c) =>
+      (filter === "Alle statussen" || c.status === filter) &&
+      (category === "Alle categorieën" || category === c.category) &&
+      matchesSearch(query, c.title, c.description, c.category),
   );
   return (
     <section className="card">
@@ -235,21 +259,48 @@ export function CasesPanel({ scope }: { scope: Scope }) {
           Dossier openen
         </Button>
       </div>
-      <div className="panel-filter">
-        <label>
-          Status{" "}
-          <select
-            aria-label="Dossierstatusfilter"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            {["Alle statussen", ...caseStatuses].map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </label>
-        <span>{visible.length} dossiers</span>
-      </div>
+      <RecordToolbar
+        label="Dossiers zoeken"
+        query={query}
+        onQuery={setQuery}
+        count={visible.length}
+        filtered={
+          !!query ||
+          filter !== "Alle statussen" ||
+          category !== "Alle categorieën"
+        }
+        onReset={() => {
+          setQuery("");
+          setFilter("Alle statussen");
+          setCategory("Alle categorieën");
+        }}
+      >
+        <select
+          aria-label="Dossierstatusfilter"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+        >
+          {["Alle statussen", ...caseStatuses].map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          aria-label="Dossiercategoriefilter"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+        >
+          {[
+            "Alle categorieën",
+            "Algemeen",
+            "Inschrijving",
+            "Adreswijziging",
+            "Lidmaatschap",
+            "Correspondentie",
+          ].map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+      </RecordToolbar>
       {visible.length ? (
         <div className="record-list">
           {visible.map((c) => (
@@ -286,7 +337,9 @@ export function CasesPanel({ scope }: { scope: Scope }) {
         <Empty
           title={
             records.length
-              ? "Geen dossiers met deze status"
+              ? query || category !== "Alle categorieën"
+                ? "Geen dossiers gevonden"
+                : "Geen dossiers met deze status"
               : "Nog geen dossiers"
           }
           description="Open een dossier om een administratieve vraag bij te houden."
@@ -433,22 +486,35 @@ function CaseForm({
     </form>
   );
 }
-export function downloadDocument(record: StoredDocument) {
-  const bytes = Uint8Array.from(atob(record.base64), (c) => c.charCodeAt(0));
-  const url = URL.createObjectURL(new Blob([bytes], { type: record.mime }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = record.name;
-  anchor.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 export function DocumentsPanel({ scope }: { scope: Scope }) {
   const data = useAdministration();
-  const records = data.documents
-    .filter((d) => sameScope(d.scope, scope))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const records = data.documents.filter((d) => sameScope(d.scope, scope));
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Alle categorieën");
+  const [sort, setSort] = useState("newest");
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<StoredDocument | null>(null);
+  const [preview, setPreview] = useState<StoredDocument | null>(null);
   const [error, setError] = useState("");
+  const visible = records
+    .filter(
+      (d) =>
+        (category === "Alle categorieën" || d.category === category) &&
+        matchesSearch(
+          query,
+          d.name,
+          d.description,
+          d.category,
+          data.cases.find((c) => c.id === d.caseId)?.title,
+        ),
+    )
+    .sort((a, b) =>
+      sort === "name"
+        ? a.name.localeCompare(b.name, "nl")
+        : sort === "oldest"
+          ? a.createdAt.localeCompare(b.createdAt)
+          : b.createdAt.localeCompare(a.createdAt),
+    );
   return (
     <section className="card">
       <div className="card-header">
@@ -465,14 +531,53 @@ export function DocumentsPanel({ scope }: { scope: Scope }) {
           Document toevoegen
         </Button>
       </div>
+      <RecordToolbar
+        label="Documenten zoeken"
+        query={query}
+        onQuery={setQuery}
+        count={visible.length}
+        filtered={
+          !!query || category !== "Alle categorieën" || sort !== "newest"
+        }
+        onReset={() => {
+          setQuery("");
+          setCategory("Alle categorieën");
+          setSort("newest");
+        }}
+      >
+        <select
+          aria-label="Documentcategoriefilter"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          {[
+            "Alle categorieën",
+            "Algemeen",
+            "Correspondentie",
+            "Formulier",
+            "Bewijsstuk (demo)",
+          ].map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+        <select
+          aria-label="Documentvolgorde"
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+        >
+          <option value="newest">Nieuwste eerst</option>
+          <option value="oldest">Oudste eerst</option>
+          <option value="name">Naam (A–Z)</option>
+        </select>
+      </RecordToolbar>
       <p className="panel-notice">
         Bestanden blijven alleen in deze browser. Gebruik geen echte
         identiteitsbewijzen of persoonsgegevens. Totale documentlimiet: 2 MB.
       </p>
       <ErrorMessage message={error} />
-      {records.length ? (
+      {visible.length ? (
         <div className="document-grid">
-          {records.map((d) => (
+          {visible.map((d) => (
             <article className="document-card" key={d.id}>
               <div className="record-title">
                 <span className="record-icon">
@@ -496,11 +601,28 @@ export function DocumentsPanel({ scope }: { scope: Scope }) {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setPreview(d)}
+                  aria-label={`Voorbeeld van ${d.name}`}
+                >
+                  <Eye size={15} />
+                  Bekijken
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => downloadDocument(d)}
                   aria-label={`Download ${d.name}`}
                 >
                   <Download size={15} />
-                  Download
+                  <span className="sr-only">Download</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditing(d)}
+                  aria-label={`Documentgegevens bewerken: ${d.name}`}
+                >
+                  <Pencil size={16} />
                 </Button>
                 <Button
                   variant="ghost"
@@ -523,8 +645,14 @@ export function DocumentsPanel({ scope }: { scope: Scope }) {
         </div>
       ) : (
         <Empty
-          title="Nog geen documenten"
-          description="Voeg een fictief document toe aan dit lid of gezin."
+          title={
+            records.length ? "Geen documenten gevonden" : "Nog geen documenten"
+          }
+          description={
+            records.length
+              ? "Pas de zoekopdracht of categorie aan."
+              : "Voeg een fictief document toe aan dit lid of gezin."
+          }
           icon={<FileText size={28} />}
         />
       )}
@@ -533,7 +661,105 @@ export function DocumentsPanel({ scope }: { scope: Scope }) {
           <DocumentForm scope={scope} onClose={() => setAdding(false)} />
         </Modal>
       )}
+      {editing && (
+        <Modal
+          title="Documentgegevens bewerken"
+          onClose={() => setEditing(null)}
+        >
+          <DocumentMetadataForm
+            record={editing}
+            onClose={() => setEditing(null)}
+          />
+        </Modal>
+      )}
+      {preview && (
+        <DocumentPreview record={preview} onClose={() => setPreview(null)} />
+      )}
     </section>
+  );
+}
+function DocumentMetadataForm({
+  record,
+  onClose,
+}: {
+  record: StoredDocument;
+  onClose: () => void;
+}) {
+  const cases = useAdministration().cases.filter((c) =>
+    sameScope(c.scope, record.scope),
+  );
+  const [error, setError] = useState("");
+  return (
+    <form
+      className="member-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const problem = saveDocument({
+          ...record,
+          category: String(form.get("category")),
+          description: String(form.get("description") ?? "").trim(),
+          caseId: String(form.get("caseId") ?? ""),
+        });
+        if (problem) setError(problem);
+        else onClose();
+      }}
+    >
+      <p className="form-notice">
+        {record.name} · de bestandsinhoud blijft behouden.
+      </p>
+      <ErrorMessage message={error} />
+      <div className="form-grid">
+        <label>
+          Categorie
+          <select
+            name="category"
+            aria-label="Documentcategorie"
+            defaultValue={record.category}
+          >
+            {[
+              "Algemeen",
+              "Correspondentie",
+              "Formulier",
+              "Bewijsstuk (demo)",
+            ].map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Dossier
+          <select
+            name="caseId"
+            aria-label="Documentdossier"
+            defaultValue={record.caseId}
+          >
+            <option value="">Geen dossierkoppeling</option>
+            {cases.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="form-span">
+          Omschrijving
+          <textarea
+            aria-label="Omschrijving"
+            name="description"
+            maxLength={2000}
+            rows={4}
+            defaultValue={record.description}
+          />
+        </label>
+      </div>
+      <div className="form-actions">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Annuleren
+        </Button>
+        <Button type="submit">Documentgegevens opslaan</Button>
+      </div>
+    </form>
   );
 }
 function DocumentForm({

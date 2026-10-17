@@ -108,3 +108,15 @@ GITHUB_PAGES_TEST=true npm test -- tests/extended-administration.spec.ts tests/m
 ```
 
 De aanvullende suite test onder meer gezinskoppelingen, contactpersonen, adreswijzigingen, extra profielvelden, notities, dossierstatussen, uploadlimieten, downloads, migratie en vernieuwen op desktop en iPad.
+
+## Zoeken, documentvoorbeelden en iPad-bediening
+
+Zoeken ondersteunt meerdere woorden in willekeurige volgorde en negeert hoofdletters en accenten. In het ledenregister worden ook postcode, telefoon, roepnaam, nationaliteit, type lidmaatschap en eigen administratieve velden doorzocht. Met het gezinsfilter kunt u de zoekopdracht verder beperken. In het gezinsregister vindt u ook een gezin via de naam, het lidnummer of e-mailadres van een gekoppeld gezinslid.
+
+Notities hebben een eigen zoekveld. Dossiers combineren zoeken met categorie- en statusfilters. Documenten combineren zoeken op bestandsnaam, omschrijving, categorie en gekoppeld dossier met een categoriefilter en sortering. Zoekopdrachten en filters kunnen in één keer worden gewist.
+
+Bij documenten opent **Bekijken** een lokaal afbeeldings- of PDF-voorbeeld. De browser verzorgt de PDF-weergave; als de browser geen ingebedde PDF toont, blijft downloaden beschikbaar. De bestandsinhoud wordt niet naar een externe voorbeeldservice verzonden. Via het potlood kunt u categorie, omschrijving en dossierkoppeling aanpassen zonder een nieuw document of extra bestandskopie te maken.
+
+Bij lange tabbladrijen verschijnen **Meer tabbladen** en **Vorige tabbladen**. Deze knoppen ondersteunen de bestaande veeg- en toetsenbordbediening op smallere schermen.
+
+De aanvullende controles in `tests/refinements.spec.ts` testen zoeken, filters, lokale documentvoorbeelden, documentgegevens bewerken, oorspronkelijke downloadbytes en tabbladnavigatie. Voeg dit bestand ook toe aan het hierboven beschreven commando voor controles tegen de Pages-export.

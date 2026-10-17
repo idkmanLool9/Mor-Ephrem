@@ -10,6 +10,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { matchesSearch } from "@/lib/search";
 import { fullName } from "@/lib/data";
 import { Avatar, Status } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
   const [city, setCity] = useState("Alle woonplaatsen");
   const [status, setStatus] = useState("Alle statussen");
   const [page, setPage] = useState(1);
+  const [familyFilter, setFamilyFilter] = useState("Alle gezinnen");
   const [sort, setSort] = useState("name");
   const isMembers = kind === "leden";
   const rows = (
@@ -39,6 +41,15 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
           status: m.status,
           email: m.email,
           count: 0,
+          familyId: m.familyId,
+          search: [
+            m.postcode,
+            m.phone,
+            m.preferredName,
+            m.nationality,
+            m.membershipType,
+            ...(m.customFields ?? []).flatMap((f) => [f.label, f.value]),
+          ].join(" "),
         }))
       : families.map((f) => ({
           id: f.id,
@@ -48,13 +59,29 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
           status: "",
           email: "",
           count: members.filter((m) => m.familyId === f.id).length,
+          familyId: f.id,
+          search: [
+            f.postcode,
+            ...members
+              .filter((m) => m.familyId === f.id)
+              .flatMap((m) => [fullName(m), m.id, m.email]),
+          ].join(" "),
         }))
   )
     .filter(
       (r) =>
-        `${r.name} ${r.id} ${r.address} ${r.city} ${r.email}`
-          .toLocaleLowerCase("nl")
-          .includes(query.trim().toLocaleLowerCase("nl")) &&
+        matchesSearch(
+          query,
+          r.name,
+          r.id,
+          r.address,
+          r.city,
+          r.email,
+          r.search,
+        ) &&
+        (!isMembers ||
+          familyFilter === "Alle gezinnen" ||
+          familyFilter === r.familyId) &&
         (city === "Alle woonplaatsen" || city === r.city) &&
         (!isMembers || status === "Alle statussen" || status === r.status),
     )
@@ -66,11 +93,15 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const current = Math.min(page, pages);
   const filtered =
-    query || city !== "Alle woonplaatsen" || status !== "Alle statussen";
+    query ||
+    city !== "Alle woonplaatsen" ||
+    status !== "Alle statussen" ||
+    familyFilter !== "Alle gezinnen";
   function reset() {
     setQuery("");
     setCity("Alle woonplaatsen");
     setStatus("Alle statussen");
+    setFamilyFilter("Alle gezinnen");
     setPage(1);
   }
   return (
@@ -88,7 +119,7 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
             placeholder={
               isMembers
                 ? "Zoek op naam, lidnummer, adres of e-mail…"
-                : "Zoek op gezinsnaam, nummer of adres…"
+                : "Zoek op gezin, gezinslid, nummer of adres…"
             }
           />
           {query && (
@@ -132,6 +163,23 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
           >
             {["Alle statussen", "Actief", "Inactief"].map((v) => (
               <option key={v}>{v}</option>
+            ))}
+          </select>
+        )}
+        {isMembers && (
+          <select
+            aria-label="Gezinsfilter"
+            value={familyFilter}
+            onChange={(event) => {
+              setFamilyFilter(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option>Alle gezinnen</option>
+            {families.map((f) => (
+              <option key={f.id} value={f.id}>
+                Familie {f.name} · {f.id}
+              </option>
             ))}
           </select>
         )}

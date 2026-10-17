@@ -358,11 +358,19 @@ export function saveCase(record: Case) {
 export function saveDocument(document: Document) {
   const current = getSnapshot();
   if (
-    current.documents.reduce((sum, d) => sum + d.size, 0) + document.size >
+    current.documents
+      .filter((d) => d.id !== document.id)
+      .reduce((sum, d) => sum + d.size, 0) +
+      document.size >
     2 * 1024 * 1024
   )
     return "De lokale documentopslag is beperkt tot 2 MB. Verwijder eerst een demodocument.";
-  return persist({ ...current, documents: [...current.documents, document] });
+  return persist({
+    ...current,
+    documents: current.documents.some((d) => d.id === document.id)
+      ? current.documents.map((d) => (d.id === document.id ? document : d))
+      : [...current.documents, document],
+  });
 }
 export function removeDocument(id: string) {
   const current = getSnapshot();
