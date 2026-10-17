@@ -80,3 +80,5 @@ De export staat in `out/`; assets en navigatie gebruiken het projectpad `/Mor-Ep
 Gebruik **Nieuw lid** in het ledenregister of **Lid bewerken** op een profiel. Nieuwe leden worden gekoppeld aan een bestaand gezin en verschijnen in register, gezinsdossier en dashboardtotalen. Filters, status en contactgegevens gebruiken dezelfde lokale dataset. De vaste gezinscontactpersoon kan niet naar een ander gezin worden verplaatst.
 
 Gebruik uitsluitend fictieve gegevens. Opslag is per browser en domein (`antioch.members.v1`), zonder synchronisatie met Supabase of andere apparaten. Wissen van websitegegevens verwijdert lokale wijzigingen. Nieuwe lokale dossiers gebruiken `/leden/lokaal?id=...`, zodat vernieuwen ook op GitHub Pages werkt. De vaste activiteitenlijst is nog geen logboek van lokale wijzigingen.
+
+Bij een bestaande Pages-instelling ‘Deploy from a branch’ wacht de app-workflow totdat de automatische branchpublicatie is afgerond. Zo kan de README-publicatie de gebouwde app niet achteraf overschrijven. De aanbevolen instelling blijft ‘GitHub Actions’.

@@ -36,11 +36,36 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pages: write
+      actions: read
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Some repositories still have branch-based Pages enabled. That automatic
+      # deployment renders README.md and must finish before our app replaces it.
+      - name: Voorkom dat de README de app overschrijft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GH_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode=$(gh api "repos/$GH_REPO/pages" --jq '.build_type')
+          if [ "$mode" != "legacy" ]; then
+            exit 0
+          fi
+          for attempt in {1..60}; do
+            states=$(gh api "repos/$GH_REPO/actions/runs?head_sha=$GH_SHA&per_page=100" --jq '.workflow_runs[] | select(.name == "pages build and deployment") | .status')
+            if [ -n "$states" ] && ! printf '%s\n' "$states" | grep -qv '^completed$'; then
+              echo "Automatische branchpublicatie afgerond; publiceer nu de app."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Branchpublicatie niet op tijd afgerond; voorkom een onzekere publicatie."
+          exit 1
       - name: Publiceer op GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
