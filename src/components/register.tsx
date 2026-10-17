@@ -10,13 +10,19 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { families, fullName } from "@/lib/data";
+import { fullName } from "@/lib/data";
 import { Avatar, Status } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import { useMembers, memberHref } from "@/lib/member-store";
+import {
+  useMembers,
+  useFamilies,
+  memberHref,
+  familyHref,
+} from "@/lib/member-store";
 const PAGE_SIZE = 8;
 export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
   const members = useMembers();
+  const families = useFamilies();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("Alle woonplaatsen");
   const [status, setStatus] = useState("Alle statussen");
@@ -108,7 +114,9 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
         >
           {[
             "Alle woonplaatsen",
-            ...Array.from(new Set(members.map((m) => m.city))).sort(),
+            ...Array.from(
+              new Set((isMembers ? members : families).map((m) => m.city)),
+            ).sort(),
           ].map((v) => (
             <option key={v}>{v}</option>
           ))}
@@ -175,7 +183,7 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
                   <td>
                     <Link
                       className="person-cell"
-                      href={isMembers ? memberHref(r.id) : `/gezinnen/${r.id}`}
+                      href={isMembers ? memberHref(r.id) : familyHref(r.id)}
                     >
                       <Avatar name={r.name} />
                       <div>
@@ -203,7 +211,7 @@ export function Register({ kind }: { kind: "leden" | "gezinnen" }) {
                     <Link
                       className="row-link"
                       aria-label={`Bekijk ${r.name}`}
-                      href={isMembers ? memberHref(r.id) : `/gezinnen/${r.id}`}
+                      href={isMembers ? memberHref(r.id) : familyHref(r.id)}
                     >
                       <ArrowUpRight size={17} />
                     </Link>

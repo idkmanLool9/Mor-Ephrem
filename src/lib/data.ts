@@ -12,6 +12,14 @@ export type Member = {
   familyId: string;
   role: string;
   joined: string;
+  preferredName?: string;
+  birthPlace?: string;
+  nationality?: string;
+  language?: string;
+  occupation?: string;
+  membershipType?: string;
+  contactPreference?: string;
+  customFields?: { label: string; value: string }[];
 };
 const names = [
   ["Youssef", "Haddad"],

@@ -22,12 +22,15 @@ npm start
 
 - Dashboard met registertotalen en recente, gekoppelde administratieve activiteiten.
 - Ledenregister met zoeken op naam, lidnummer, adres, woonplaats en e-mail; filters op woonplaats/status; sortering en paginering.
-- Ledenprofielen met tabbladen voor overzicht, persoonsgegevens, gezin, lidmaatschap en logboek.
-- Gezinsregister met zoeken, woonplaatsfilter en gekoppelde leden- en gezinsprofielen.
+- Uitgebreide ledenprofielen met roepnaam, geboorteplaats, nationaliteit, voorkeurstaal, beroep, contactvoorkeur, type lidmaatschap en maximaal 20 eigen administratieve velden.
+- Gezinsregister met zoeken, woonplaatsfilter, aanmaken en bewerken, gezinsleden koppelen, contactpersoon kiezen en optioneel adressen overnemen.
+- Notities toevoegen, bewerken en verwijderen bij leden en gezinnen.
+- Dossiers openen en bewerken met categorie, omschrijving en status (Open, In behandeling, Afgerond).
+- Lokale PDF-, PNG- en JPEG-documenten toevoegen, categoriseren, koppelen aan een dossier, downloaden en verwijderen.
 - Desktop- en iPad-layout; op kleine schermen een inklapbaar navigatiemenu.
 - Grafregister en Begraafplaats zijn uitgeschakeld en gelabeld met ‘Binnenkort’.
 
-Dit is een **lokale demonstratie**. Leden aanmaken en bewerken kan met formuliercontroles; deze wijzigingen worden via localStorage uitsluitend in dezelfde browser bewaard. Er zijn geen centrale opslag, login, autorisaties of documenten actief. De activiteitendata zijn een vaste fictieve momentopname, geen audittrail. Er worden geen gegevens naar Supabase verzonden.
+Dit is een **lokale demonstratie**. Leden aanmaken en bewerken kan met formuliercontroles; deze wijzigingen worden via localStorage uitsluitend in dezelfde browser bewaard. Er zijn geen centrale opslag, login of autorisaties actief. Documentbestanden worden uitsluitend lokaal in de browser bewaard. De activiteitendata zijn een vaste fictieve momentopname, geen audittrail. Er worden geen gegevens naar Supabase verzonden.
 
 ## Supabase voorbereiden
 
@@ -77,8 +80,31 @@ De export staat in `out/`; assets en navigatie gebruiken het projectpad `/Mor-Ep
 
 ## Lokale ledenadministratie
 
-Gebruik **Nieuw lid** in het ledenregister of **Lid bewerken** op een profiel. Nieuwe leden worden gekoppeld aan een bestaand gezin en verschijnen in register, gezinsdossier en dashboardtotalen. Filters, status en contactgegevens gebruiken dezelfde lokale dataset. De vaste gezinscontactpersoon kan niet naar een ander gezin worden verplaatst.
+Gebruik **Nieuw lid** in het ledenregister of **Lid bewerken** op een profiel. Nieuwe leden worden gekoppeld aan een bestaand gezin en verschijnen in register, gezinsdossier en dashboardtotalen. Filters, status en contactgegevens gebruiken dezelfde lokale dataset. Een contactpersoon kan pas naar een ander gezin worden verplaatst nadat in het huidige gezin een andere contactpersoon is gekozen.
 
-Gebruik uitsluitend fictieve gegevens. Opslag is per browser en domein (`antioch.members.v1`), zonder synchronisatie met Supabase of andere apparaten. Wissen van websitegegevens verwijdert lokale wijzigingen. Nieuwe lokale dossiers gebruiken `/leden/lokaal?id=...`, zodat vernieuwen ook op GitHub Pages werkt. De vaste activiteitenlijst is nog geen logboek van lokale wijzigingen.
+Gebruik uitsluitend fictieve gegevens. Opslag is per browser en domein (`antioch.administration.v2`); bestaande leden uit `antioch.members.v1` worden automatisch overgenomen bij het eerste gebruik, zonder synchronisatie met Supabase of andere apparaten. Wissen van websitegegevens verwijdert lokale wijzigingen. Nieuwe lokale dossiers gebruiken `/leden/lokaal?id=...`, zodat vernieuwen ook op GitHub Pages werkt. De vaste activiteitenlijst is nog geen logboek van lokale wijzigingen.
 
 Bij een bestaande Pages-instelling ‘Deploy from a branch’ wacht de app-workflow totdat de automatische branchpublicatie is afgerond. Zo kan de README-publicatie de gebouwde app niet achteraf overschrijven. De aanbevolen instelling blijft ‘GitHub Actions’.
+
+## Gezinnen, dossiers en documenten
+
+Gebruik **Nieuw gezin** in het gezinsregister. Koppel daarna bestaande leden via **Lid koppelen**, of kies dit gezin bij een nieuw lid. Een lid behoort aan één gezin; koppelen verplaatst het lid uit het vorige gezin. De gezinscontactpersoon moet een gekoppeld lid zijn. Bij gezinswijzigingen kunt u expliciet aanvinken dat het gezinsadres ook bij alle gezinsleden wordt aangepast; anders blijven individuele adressen intact.
+
+Leden en gezinnen hebben afzonderlijke tabbladen voor **Notities**, **Dossiers** en **Documenten**. De inhoud hoort alleen bij dat lid of gezin. Notities kunnen worden aangepast en na bevestiging verwijderd. Dossiers hebben een categorie en behandelstatus; documenten kunnen aan een dossier van dezelfde eigenaar worden gekoppeld.
+
+Documenten worden met hun categorie, omschrijving en bestandsinhoud in lokale browseropslag bewaard. Ondersteund: PDF, PNG en JPEG, maximaal **1 MB per bestand** en **2 MB totaal** aan oorspronkelijke bestandsbytes. Het daadwerkelijke browserquotum kan lager zijn; opslagfouten worden getoond zonder de wijziging als opgeslagen te melden. Bij downloaden worden de oorspronkelijke bytes teruggegeven. Er worden geen bestanden naar Supabase of GitHub verstuurd. Gebruik geen echte identiteitsbewijzen of productiegegevens. Wissen van websitegegevens verwijdert ook lokale documenten.
+
+De data zijn een onbeveiligde lokale demo, geen productiearchief of betrouwbaar auditlogboek. Centrale opslag, gebruikersrechten en back-ups vereisen een latere Supabase-integratie.
+
+Voor browsercontroles tegen de statische Pages-export:
+
+```bash
+GITHUB_PAGES=true npm run build
+mkdir -p /tmp/antioch-pages-test
+ln -sfn "$PWD/out" /tmp/antioch-pages-test/Mor-Ephrem
+python3 -m http.server 3100 --bind 127.0.0.1 --directory /tmp/antioch-pages-test
+# In een tweede terminal:
+GITHUB_PAGES_TEST=true npm test -- tests/extended-administration.spec.ts tests/member-editing.spec.ts
+```
+
+De aanvullende suite test onder meer gezinskoppelingen, contactpersonen, adreswijzigingen, extra profielvelden, notities, dossierstatussen, uploadlimieten, downloads, migratie en vernieuwen op desktop en iPad.

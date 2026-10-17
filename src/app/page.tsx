@@ -1,5 +1,5 @@
 "use client";
-import { useMembers, memberHref } from "@/lib/member-store";
+import { useMembers, useFamilies, memberHref } from "@/lib/member-store";
 import Link from "next/link";
 import {
   Users,
@@ -9,11 +9,12 @@ import {
   ClipboardList,
   ArrowUpRight,
 } from "lucide-react";
-import { families, activities, date, fullName } from "@/lib/data";
+import { activities, date, fullName } from "@/lib/data";
 import { PageHeading, Card, Avatar, Status } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 export default function Dashboard() {
   const members = useMembers();
+  const families = useFamilies();
   return (
     <>
       <PageHeading

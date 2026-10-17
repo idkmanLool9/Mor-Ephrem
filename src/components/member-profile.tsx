@@ -1,15 +1,30 @@
 "use client";
 import { useRef, useState } from "react";
-import { useMembers, memberHref } from "@/lib/member-store";
+import {
+  useMembers,
+  useFamilies,
+  useAdministration,
+  sameScope,
+  memberHref,
+  familyHref,
+} from "@/lib/member-store";
+import {
+  NotesPanel,
+  CasesPanel,
+  DocumentsPanel,
+} from "@/components/record-panels";
 import { MemberForm } from "@/components/member-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Mail, MapPin, ArrowUpRight, FileClock } from "lucide-react";
-import { Member, families, activities, date, fullName } from "@/lib/data";
+import { Member, activities, date, fullName } from "@/lib/data";
 import { Avatar, Breadcrumb, Card, Fields, Status } from "@/components/shared";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 export function MemberProfile({ member }: { member: Member }) {
   const members = useMembers();
+  const families = useFamilies();
+  const data = useAdministration();
+  const scope = { kind: "member" as const, id: member.id };
   const m = members.find((item) => item.id === member.id) ?? member;
   const dialog = useRef<HTMLDialogElement>(null);
   const [saved, setSaved] = useState(false);
@@ -33,11 +48,7 @@ export function MemberProfile({ member }: { member: Member }) {
     </Card>
   );
   const familyCard = (
-    <Card
-      title="Gezin"
-      href={`/gezinnen/${family.id}`}
-      linkLabel="Bekijk gezin"
-    >
+    <Card title="Gezin" href={familyHref(family.id)} linkLabel="Bekijk gezin">
       <div className="profile-list">
         {relatives.map((r) => (
           <Link
@@ -56,12 +67,38 @@ export function MemberProfile({ member }: { member: Member }) {
       </div>
     </Card>
   );
+  const additional = (
+    <Card title="Aanvullende persoonsgegevens">
+      <Fields
+        items={[
+          ["Roepnaam", m.preferredName || "Niet vastgelegd"],
+          ["Geboorteplaats", m.birthPlace || "Niet vastgelegd"],
+          ["Nationaliteit", m.nationality || "Niet vastgelegd"],
+          ["Voorkeurstaal", m.language || "Niet vastgelegd"],
+          ["Beroep", m.occupation || "Niet vastgelegd"],
+          ["Contactvoorkeur", m.contactPreference || "Geen voorkeur"],
+        ]}
+      />
+    </Card>
+  );
+  const custom = (
+    <Card title="Eigen administratieve velden">
+      {m.customFields?.length ? (
+        <Fields items={m.customFields.map((f) => [f.label, f.value || "—"])} />
+      ) : (
+        <p className="panel-notice">
+          Nog geen eigen velden. Voeg ze toe via Lid bewerken.
+        </p>
+      )}
+    </Card>
+  );
   const membership = (
     <Card title="Lidmaatschap">
       <Fields
         items={[
           ["Status", m.status],
           ["Lid sinds", date(m.joined)],
+          ["Type lidmaatschap", m.membershipType || "Regulier"],
           ["Registratie", "Fictieve demonstratie"],
           ["Gezinsnummer", m.familyId],
         ]}
@@ -138,20 +175,59 @@ export function MemberProfile({ member }: { member: Member }) {
           <TabsTrigger value="persoon">Persoonsgegevens</TabsTrigger>
           <TabsTrigger value="gezin">Gezin</TabsTrigger>
           <TabsTrigger value="lidmaatschap">Lidmaatschap</TabsTrigger>
+          <TabsTrigger value="dossiers">
+            Dossiers{" "}
+            <span className="tab-count">
+              {data.cases.filter((c) => sameScope(c.scope, scope)).length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="documenten">
+            Documenten{" "}
+            <span className="tab-count">
+              {data.documents.filter((d) => sameScope(d.scope, scope)).length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="notities">
+            Notities{" "}
+            <span className="tab-count">
+              {data.notes.filter((n) => sameScope(n.scope, scope)).length}
+            </span>
+          </TabsTrigger>
           <TabsTrigger value="logboek">Logboek</TabsTrigger>
         </TabsList>
         <TabsContent value="overzicht">
           <div className="detail-grid">
-            <div>{personal}</div>
+            <div className="space-y-6">
+              {personal}
+              {additional}
+              {custom}
+            </div>
             <div className="space-y-6">
               {familyCard}
               {membership}
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="persoon">{personal}</TabsContent>
+        <TabsContent value="persoon">
+          <div className="detail-grid">
+            <div className="space-y-6">
+              {personal}
+              {additional}
+            </div>
+            {custom}
+          </div>
+        </TabsContent>
         <TabsContent value="gezin">{familyCard}</TabsContent>
         <TabsContent value="lidmaatschap">{membership}</TabsContent>
+        <TabsContent value="dossiers">
+          <CasesPanel scope={scope} />
+        </TabsContent>
+        <TabsContent value="documenten">
+          <DocumentsPanel scope={scope} />
+        </TabsContent>
+        <TabsContent value="notities">
+          <NotesPanel scope={scope} />
+        </TabsContent>
         <TabsContent value="logboek">
           <Card title="Administratief logboek">
             {history.length ? (

@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { families, type Member } from "@/lib/data";
-import { memberHref, nextMemberId, saveMember } from "@/lib/member-store";
+import { type Member } from "@/lib/data";
+import {
+  memberHref,
+  nextMemberId,
+  saveMember,
+  useFamilies,
+} from "@/lib/member-store";
 import { Button } from "@/components/ui/button";
 export function MemberForm({
   member,
@@ -14,6 +19,10 @@ export function MemberForm({
   onCancel?: () => void;
 }) {
   const router = useRouter();
+  const families = useFamilies();
+  const [customFields, setCustomFields] = useState(
+    (member?.customFields ?? []).map((field, id) => ({ ...field, id })),
+  );
   const [error, setError] = useState("");
   const [familyId, setFamilyId] = useState(member?.familyId ?? families[0].id);
   const contact = member && families.some((f) => f.contact === member.id);
@@ -41,7 +50,28 @@ export function MemberForm({
     }
     const status = text("status");
     if (status !== "Actief" && status !== "Inactief") return;
+    const fields = customFields.map(({ label, value }) => ({
+      label: label.trim(),
+      value: value.trim(),
+    }));
+    if (
+      fields.some((f) => !f.label) ||
+      new Set(fields.map((f) => f.label.toLocaleLowerCase("nl"))).size !==
+        fields.length
+    ) {
+      setError("Geef elk eigen veld een unieke, niet-lege veldnaam.");
+      return;
+    }
     const record: Member = {
+      ...member,
+      preferredName: text("preferredName"),
+      birthPlace: text("birthPlace"),
+      nationality: text("nationality"),
+      language: text("language"),
+      occupation: text("occupation"),
+      membershipType: text("membershipType"),
+      contactPreference: text("contactPreference"),
+      customFields: fields,
       id: member?.id ?? nextMemberId(),
       firstName: text("firstName"),
       lastName: text("lastName"),
@@ -130,6 +160,44 @@ export function MemberForm({
         </div>
       </fieldset>
       <fieldset>
+        <legend>Aanvullende persoonsgegevens</legend>
+        <p className="section-description form-help">
+          Deze velden zijn optioneel. Gebruik uitsluitend fictieve informatie.
+        </p>
+        <div className="form-grid">
+          {(
+            [
+              { name: "preferredName", label: "Roepnaam" },
+              { name: "birthPlace", label: "Geboorteplaats" },
+              { name: "nationality", label: "Nationaliteit" },
+              { name: "language", label: "Voorkeurstaal" },
+              { name: "occupation", label: "Beroep" },
+            ] as const
+          ).map((field) => (
+            <label key={field.name}>
+              {field.label}
+              <input
+                name={field.name}
+                maxLength={100}
+                defaultValue={member?.[field.name]}
+              />
+            </label>
+          ))}
+          <label>
+            Contactvoorkeur
+            <select
+              name="contactPreference"
+              aria-label="Contactvoorkeur"
+              defaultValue={member?.contactPreference ?? "Geen voorkeur"}
+            >
+              <option>Geen voorkeur</option>
+              <option>E-mail</option>
+              <option>Telefoon</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+      <fieldset>
         <legend>Gezin en adres</legend>
         <div className="form-grid">
           <label>
@@ -204,7 +272,9 @@ export function MemberForm({
         </div>
         {contact && (
           <p className="page-note">
-            De vaste contactpersoon blijft gekoppeld aan dit gezin.
+            De contactpersoon blijft gekoppeld aan dit gezin. Kies eerst een
+            andere contactpersoon via het gezinsdossier om dit lid te
+            verplaatsen.
           </p>
         )}
       </fieldset>
@@ -223,6 +293,19 @@ export function MemberForm({
             </select>
           </label>
           <label>
+            Type lidmaatschap
+            <select
+              name="membershipType"
+              aria-label="Type lidmaatschap"
+              defaultValue={member?.membershipType ?? "Regulier"}
+            >
+              <option>Regulier</option>
+              <option>Jeugdlid</option>
+              <option>Gastlid</option>
+              <option>Overig</option>
+            </select>
+          </label>
+          <label>
             Lid sinds
             <input
               name="joined"
@@ -234,6 +317,81 @@ export function MemberForm({
             />
           </label>
         </div>
+      </fieldset>
+      <fieldset>
+        <legend>Eigen administratieve velden</legend>
+        <p className="section-description form-help">
+          Voeg maximaal 20 eigen velden toe, bijvoorbeeld ‘Vrijwilligersrol’ of
+          ‘Registratiebron’.
+        </p>
+        {customFields.map((field) => (
+          <div className="custom-field-row" key={field.id}>
+            <label>
+              Veldnaam
+              <input
+                aria-label={`Veldnaam ${field.id + 1}`}
+                required
+                maxLength={60}
+                value={field.label}
+                onChange={(event) =>
+                  setCustomFields((fields) =>
+                    fields.map((f) =>
+                      f.id === field.id
+                        ? { ...f, label: event.target.value }
+                        : f,
+                    ),
+                  )
+                }
+              />
+            </label>
+            <label>
+              Waarde
+              <input
+                aria-label={`Veldwaarde ${field.id + 1}`}
+                maxLength={500}
+                value={field.value}
+                onChange={(event) =>
+                  setCustomFields((fields) =>
+                    fields.map((f) =>
+                      f.id === field.id
+                        ? { ...f, value: event.target.value }
+                        : f,
+                    ),
+                  )
+                }
+              />
+            </label>
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label={`Eigen veld ${field.id + 1} verwijderen`}
+              onClick={() =>
+                setCustomFields((fields) =>
+                  fields.filter((f) => f.id !== field.id),
+                )
+              }
+            >
+              Verwijderen
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          disabled={customFields.length >= 20}
+          onClick={() =>
+            setCustomFields((fields) => [
+              ...fields,
+              {
+                id: Math.max(-1, ...fields.map((f) => f.id)) + 1,
+                label: "",
+                value: "",
+              },
+            ])
+          }
+        >
+          Eigen veld toevoegen
+        </Button>
       </fieldset>
       <div className="form-actions">
         <Button
