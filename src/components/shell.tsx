@@ -14,6 +14,7 @@ import {
   Layers3,
   FolderOpen,
   Files,
+  Palette,
 } from "lucide-react";
 import { Fragment, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -23,10 +24,12 @@ const links = [
   { href: "/gezinnen", label: "Gezinsregister", icon: House },
   { href: "/dossiers", label: "Dossiers", icon: FolderOpen },
   { href: "/documenten", label: "Documenten", icon: Files },
+  { href: "/ontwerpen", label: "Ontwerpen vergelijken", icon: Palette },
 ];
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  if (path.startsWith("/ontwerpen")) return <>{children}</>;
   return (
     <div className="min-h-screen">
       <aside className={cn("sidebar", open && "sidebar-open")}>

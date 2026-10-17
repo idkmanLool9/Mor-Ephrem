@@ -142,3 +142,7 @@ Kolommen en bewaarde groepen staan afzonderlijk in `antioch.member-workspace.v1`
 De werkruimte heeft een vernieuwde navigatie, een dashboard met woonplaatsverdeling en duidelijk onderscheiden registers, dossiers en documenten. Inter en Manrope worden lokaal meegeleverd; de browser hoeft geen externe lettertypedienst te benaderen. De vormgeving past zich aan desktop en iPad aan. Bestaande lokale voorbeeldgegevens blijven behouden.
 
 De browsertests controleren ook tekstcontrast op de belangrijkste schermen en controleren of deze binnen de schermbreedte blijven. Dit is een gerichte controle, geen volledige toegankelijkheidsaudit.
+
+### Ontwerpen vergelijken
+
+Open `/ontwerpen` (op GitHub Pages: `/Mor-Ephrem/ontwerpen/`) of kies **Ontwerpen vergelijken** in het menu. Vijf onafhankelijke stijlstudies tonen hetzelfde fictieve ledenregister: Compact, Vertrouwd, Verfijnd, Rustig en Werkplek. Zoeken, een statusfilter en een selecteerbaar ledenprofiel maken de verschillen in de browser zichtbaar. De voorbeelden bewaren geen gegevens en wijzigen de administratie niet; navigatieonderdelen binnen het voorbeeld zijn visueel. De teruglink opent de bestaande administratie.
