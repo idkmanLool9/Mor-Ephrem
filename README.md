@@ -63,7 +63,7 @@ Een al geïnstalleerde Chromium gebruiken kan met `PLAYWRIGHT_CHROMIUM_EXECUTABL
 
 ## GitHub Pages
 
-De workflow `.github/workflows/pages.yml` bouwt en publiceert automatisch bij pushes naar `main` en `feat/antioch-administration`. Kies in GitHub **Settings → Pages → Build and deployment → Source: GitHub Actions**. Start daarna indien nodig de workflow **Publiceer Antioch Administration** via **Actions → Run workflow** op de implementatiebranch.
+De workflow `.github/workflows/pages.yml` bouwt en publiceert automatisch bij pushes naar `main` en `feat/antioch-administration`. Kies in GitHub **Settings → Pages → Build and deployment → Source: GitHub Actions**. Open daarna onder **Actions** de laatste uitvoering van **Publiceer Antioch Administration** op de implementatiebranch en kies indien nodig **Re-run all jobs**. Zodra de workflow ook op de standaardbranch staat, is handmatig starten via **Run workflow** beschikbaar.
 
 De website is na succesvolle publicatie beschikbaar op `https://idkmanlool9.github.io/Mor-Ephrem/`. De volledige demo wordt statisch geëxporteerd, inclusief alle leden- en gezinsprofielen. GitHub Pages draait geen Next.js-server; databaseopslag en server-side login worden hiermee niet gepubliceerd.
 
