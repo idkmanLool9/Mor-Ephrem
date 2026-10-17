@@ -1,0 +1,71 @@
+name: Publiceer Antioch Administration
+
+on:
+  push:
+    branches: [main, feat/antioch-administration]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Bouw statische Pages-versie
+        run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+      - run: npm run typecheck
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      actions: read
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Some repositories still have branch-based Pages enabled. That automatic
+      # deployment renders README.md and must finish before our app replaces it.
+      - name: Voorkom dat de README de app overschrijft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GH_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode=$(gh api "repos/$GH_REPO/pages" --jq '.build_type')
+          if [ "$mode" != "legacy" ]; then
+            exit 0
+          fi
+          for attempt in {1..60}; do
+            states=$(gh api "repos/$GH_REPO/actions/runs?head_sha=$GH_SHA&per_page=100" --jq '.workflow_runs[] | select(.name == "pages build and deployment") | .status')
+            if [ -n "$states" ] && ! printf '%s\n' "$states" | grep -qv '^completed$'; then
+              echo "Automatische branchpublicatie afgerond; publiceer nu de app."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Branchpublicatie niet op tijd afgerond; voorkom een onzekere publicatie."
+          exit 1
+      - name: Publiceer op GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
