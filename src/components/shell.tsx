@@ -15,7 +15,7 @@ import {
   FolderOpen,
   Files,
 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { cn } from "@/lib/utils";
 const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -35,7 +35,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Layers3 size={23} />
           </span>
           <span>
-            ANTIOCH<span className="brand-sub">ADMINISTRATION</span>
+            Antioch<span className="brand-sub">Administration</span>
           </span>
         </Link>
         <button
@@ -45,24 +45,43 @@ export function Shell({ children }: { children: React.ReactNode }) {
         >
           <PanelLeftClose size={22} />
         </button>
-        <div className="nav-label">WERKRUIMTE</div>
+        <div className="workspace-identity">
+          <span className="workspace-identity-icon">
+            <House size={17} />
+          </span>
+          <span>
+            Administratie<small>Uw werkruimte</small>
+          </span>
+          <span className="workspace-identity-badge">DEMO</span>
+        </div>
+        <div className="nav-label">OVERZICHT</div>
         <nav aria-label="Hoofdnavigatie">
-          {links.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className={cn(
-                "nav-item",
-                (href === "/" ? path === "/" : path.startsWith(href)) &&
-                  "nav-active",
+          {links.map(({ href, label, icon: Icon }, index) => (
+            <Fragment key={href}>
+              {index === 1 && (
+                <div className="nav-label nav-section-label">REGISTERS</div>
               )}
-            >
-              <Icon size={19} />
-              {label}
-            </Link>
+              {index === 3 && (
+                <div className="nav-label nav-section-label">WERKRUIMTES</div>
+              )}
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "nav-item",
+                  (href === "/" ? path === "/" : path.startsWith(href)) &&
+                    "nav-active",
+                )}
+              >
+                <Icon size={19} />
+                <span>{label}</span>
+                <ChevronRight size={14} className="nav-chevron" />
+              </Link>
+            </Fragment>
           ))}
           <div className="nav-divider" />
+          <div className="nav-label">IN ONTWIKKELING</div>
           {[
             { label: "Grafregister", icon: Archive },
             { label: "Begraafplaats", icon: Map },
@@ -113,7 +132,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="demo-label">Demo</span>
+            <span className="demo-label">
+              <span />
+              Demonstratie
+            </span>
             <span className="avatar avatar-small">AB</span>
             <div className="user-label">
               Administratie<small>Beheerder · demo</small>
@@ -123,7 +145,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <main>{children}</main>
         <footer>
           Antioch Administration{" "}
-          <span>Versie 0.4 · Fictieve demonstratiegegevens</span>
+          <span>Versie 0.5 · Fictieve demonstratiegegevens</span>
         </footer>
       </div>
     </div>

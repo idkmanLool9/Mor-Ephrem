@@ -136,3 +136,9 @@ Het ledenregister is nu een **ledenwerktafel**:
 - **Bulkbewerking:** wijzig status, type lidmaatschap of contactvoorkeur. De controle toont per geselecteerd lid de oude en nieuwe waarde; pas de tweede bevestiging slaat de wijziging op. Gezinskoppelingen en adressen vallen buiten deze bulkactie. De wijziging wordt in één opslagbewerking uitgevoerd. Als de browseropslag faalt of een geselecteerd lid intussen in een ander tabblad is gewijzigd, wordt de bulkactie geblokkeerd.
 
 Kolommen en bewaarde groepen staan afzonderlijk in `antioch.member-workspace.v1`; de administratie en documenten blijven in `antioch.administration.v2`. De browsercontroles in `tests/workspaces.spec.ts` testen de centrale werkruimtes, voorbeelden, filters, bewaarde selecties en gecontroleerde bulkacties op desktop en iPad. Dit bestand kan ook met `GITHUB_PAGES_TEST=true` tegen de Pages-export worden uitgevoerd.
+
+### Vormgeving (versie 0.5)
+
+De werkruimte heeft een vernieuwde navigatie, een dashboard met woonplaatsverdeling en duidelijk onderscheiden registers, dossiers en documenten. Inter en Manrope worden lokaal meegeleverd; de browser hoeft geen externe lettertypedienst te benaderen. De vormgeving past zich aan desktop en iPad aan. Bestaande lokale voorbeeldgegevens blijven behouden.
+
+De browsertests controleren ook tekstcontrast op de belangrijkste schermen en controleren of deze binnen de schermbreedte blijven. Dit is een gerichte controle, geen volledige toegankelijkheidsaudit.

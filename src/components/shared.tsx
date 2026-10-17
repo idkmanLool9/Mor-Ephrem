@@ -33,7 +33,12 @@ export function Status({ status }: { status: string }) {
 }
 export function Avatar({ name }: { name: string }) {
   return (
-    <span className="avatar">
+    <span
+      className="avatar"
+      data-tone={
+        Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4
+      }
+    >
       {name
         .split(" ")
         .map((s) => s[0])

@@ -174,7 +174,7 @@ small {
   display: block;
   font-size: 10px;
   font-weight: 400;
-  color: #78879a;
+  color: #667282;
   margin-top: 3px;
 }
 .demo-label {
@@ -234,7 +234,7 @@ main {
 }
 .date-label {
   font-size: 11px;
-  color: #78879a;
+  color: #667282;
   white-space: nowrap;
 }
 .stats-grid {
